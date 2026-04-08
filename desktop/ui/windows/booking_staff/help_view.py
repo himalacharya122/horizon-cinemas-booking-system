@@ -1,6 +1,6 @@
 """
 desktop/ui/windows/booking_staff/help_view.py
-User Guide and Contact Admin information.
+implements the Help & Guide view providing instructional content and administrative contact information.
 """
 
 from PyQt6.QtWidgets import (  # type: ignore
@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (  # type: ignore
 from desktop.ui.theme import (
     SPACING_LG,
     SPACING_MD,
-    TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     body_font,
@@ -28,11 +27,15 @@ from desktop.ui.widgets import (
 
 
 class HelpView(QWidget):
+    """a view that presents the user guide and technical support contact details to staff."""
+
     def __init__(self):
+        """initialises the help view and builds the tabbed interface."""
         super().__init__()
         self._build_ui()
 
     def _build_ui(self):
+        """constructs the primary layout featuring a QTabWidget for Guide and Contact sections."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -42,15 +45,16 @@ class HelpView(QWidget):
 
         tabs = QTabWidget()
 
-        # User Guide tab (scrollable)
+        # user guide tab providing step-by-step instructions
         tabs.addTab(self._build_guide_tab(), "User Guide")
 
-        # Contact Admin tab (scrollable)
+        # contact admin tab providing support channel information
         tabs.addTab(self._build_contact_tab(), "Contact Admin")
 
         layout.addWidget(tabs, 1)
 
     def _build_guide_tab(self) -> QScrollArea:
+        """constructs a scrollable area containing the multi-section user guide."""
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
@@ -128,6 +132,7 @@ class HelpView(QWidget):
         return scroll
 
     def _build_contact_tab(self) -> QScrollArea:
+        """constructs a scrollable area containing administrative support contact information."""
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
@@ -157,16 +162,13 @@ class HelpView(QWidget):
         ]
 
         for label, value in info:
-            lbl = QLabel(label)
-            lbl.setFont(body_font(10))
-            lbl.setStyleSheet(
-                f"color: {TEXT_MUTED}; background: transparent; font-weight: 600; margin-top: 8px;"
-            )
+            lbl = subheading_label(label, 10)
+            lbl.setStyleSheet(lbl.styleSheet() + " margin-top: 8px;")
             card.add(lbl)
 
             val = QLabel(value)
             val.setFont(body_font(10))
-            val.setStyleSheet(f"color: {TEXT_PRIMARY}; background: transparent;")
+            val.setStyleSheet(f"color: {TEXT_PRIMARY}; background: transparent; margin-left: 1px;")
             val.setWordWrap(True)
             card.add(val)
 

@@ -1,7 +1,7 @@
 """
 desktop/ui/windows/booking_staff/new_booking.py
-New booking form: seat map, AI recommendations, upsell suggestions,
-confirmation modal, and print/copy receipt.
+implements the New Booking interface for Booking Staff.
+features an interactive Seat Map, AI-driven seat recommendations, upsell suggestions, and receipt generation.
 """
 
 from typing import Dict, List, Optional
@@ -35,8 +35,8 @@ from desktop.ui.theme import (
     BG_DARKEST,
     BG_HOVER,
     BORDER,
-    BORDER_LIGHT,
     GOLD,
+    HERO_BG,
     RADIUS,
     SPACING_LG,
     SPACING_MD,
@@ -64,14 +64,14 @@ from desktop.ui.widgets import (
     subheading_label,
 )
 
+# ai seat recommendation logic
 
-# Seat scoring (AI recommendation)
 
 def _recommend_seats(seats: List[dict], num_tickets: int) -> List[dict]:
     """
-    Score all available seats and return the best N consecutive seats.
-    Scoring: centre row × centre column weighting.
-    Prefers consecutive seats within a single row.
+    score all available seats and return the best n consecutive seats.
+    scoring: centre row × centre column weighting.
+    prefers consecutive seats within a single row.
     """
     available = [s for s in seats if s["is_available"]]
     if len(available) < num_tickets:
@@ -88,7 +88,7 @@ def _recommend_seats(seats: List[dict], num_tickets: int) -> List[dict]:
 
     def col_num(seat_number: str, row_label: str) -> int:
         """Extract the column number from a seat_number string."""
-        suffix = seat_number[len(row_label):] if seat_number.startswith(row_label) else seat_number
+        suffix = seat_number[len(row_label) :] if seat_number.startswith(row_label) else seat_number
         digits = "".join(c for c in suffix if c.isdigit())
         return int(digits) if digits else 0
 
@@ -129,7 +129,8 @@ def _recommend_seats(seats: List[dict], num_tickets: int) -> List[dict]:
     return [s[1] for s in all_scored[:num_tickets]]
 
 
-# Upsell suggestions
+# rule-based upsell suggestion logic
+
 
 def _build_upsell_tips(avail: dict) -> List[str]:
     """
@@ -151,9 +152,7 @@ def _build_upsell_tips(avail: dict) -> List[str]:
             "Secure the booking now."
         )
     elif occupancy >= 0.60:
-        tips.append(
-            f"{seats_available} of {seats_total} seats still available — filling up fast."
-        )
+        tips.append(f"{seats_available} of {seats_total} seats still available — filling up fast.")
 
     if seat_type == "lower_hall":
         vip_price = round(unit_price * 1.44, 2)
@@ -178,15 +177,21 @@ def _build_upsell_tips(avail: dict) -> List[str]:
     return tips[:3]  # cap at 3 tips
 
 
-# Seat button
+# custom seat map button widget
+
 
 class SeatButton(QPushButton):
+    """a specialized button representing a single seat in the cinema auditorium."""
+
     toggled_seat = pyqtSignal(dict, bool)  # seat_data, is_selected
 
     STATE_AVAILABLE = "available"
     STATE_BOOKED = "booked"
     STATE_SELECTED = "selected"
     STATE_RECOMMENDED = "recommended"
+
+    # Seat button size — large enough to comfortably show 2–3 character labels
+    SEAT_SIZE = 52
 
     def __init__(self, seat: dict):
         super().__init__()
@@ -198,13 +203,14 @@ class SeatButton(QPushButton):
         row = seat["row_label"]
         label = seat["seat_number"]
         if label.startswith(row):
-            label = label[len(row):]
+            label = label[len(row) :]
         if not label:
             label = seat["seat_number"]
 
         self.setText(label)
-        self.setFixedSize(34, 34)
-        self.setFont(body_font(8, bold=True))
+        # Fixed square size — generous enough that padding + border don't clip text
+        self.setFixedSize(self.SEAT_SIZE, self.SEAT_SIZE)
+        self.setFont(body_font(10, bold=True))
         self.setToolTip(seat["seat_number"])
         self.setCursor(
             Qt.CursorShape.PointingHandCursor
@@ -246,26 +252,33 @@ class SeatButton(QPushButton):
             self.STATE_AVAILABLE: (BG_CARD, TEXT_SECONDARY, BORDER),
             self.STATE_SELECTED: (ACCENT, WHITE, ACCENT_HOVER),
             self.STATE_RECOMMENDED: (ACCENT_LIGHT, GOLD, ACCENT),
-            self.STATE_BOOKED: (BG_DARKEST, "#3A3A3A", BORDER),
+            self.STATE_BOOKED: ("#D9D9D9", "#888888", "#CCCCCC"),
         }
         bg, fg, border = styles[self._state]
+        hover_bg = BG_HOVER if self._state == self.STATE_AVAILABLE else bg
+        # No padding in the stylesheet — geometry is fully controlled by setFixedSize.
+        # Padding inside a fixed-size button steals from the content area and clips text.
         self.setStyleSheet(f"""
             QPushButton {{
                 background-color: {bg};
                 color: {fg};
                 border: 1px solid {border};
-                border-radius: 4px;
+                border-radius: 6px;
+                padding: 0px;
             }}
             QPushButton:hover {{
-                background-color: {"#2A2B2F" if self._state == self.STATE_AVAILABLE else bg};
+                background-color: {hover_bg};
             }}
         """)
         self.setEnabled(self.seat["is_available"])
 
 
-# Seat map widget
+# interactive seat map grid widget
+
 
 class SeatMapWidget(QWidget):
+    """a grid-based widget for visualizing and selecting cinema seats."""
+
     selection_changed = pyqtSignal(int)  # emits current selected count
 
     def __init__(self):
@@ -286,24 +299,18 @@ class SeatMapWidget(QWidget):
         header.addWidget(self.count_label)
         header.addStretch()
 
-        self.recommend_btn = QPushButton("Use AI Recommendation")
-        self.recommend_btn.setFont(body_font(9))
-        self.recommend_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.recommend_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {ACCENT_LIGHT};
-                color: {GOLD};
-                border: 1px solid {ACCENT};
-                border-radius: 4px;
-                padding: 4px 10px;
-            }}
-            QPushButton:hover {{ background-color: #3A1015; }}
-        """)
+        self.recommend_btn = secondary_button("Use AI Recommendation")
+        self.recommend_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 180px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         self.recommend_btn.clicked.connect(self._apply_recommendation)
         header.addWidget(self.recommend_btn)
         layout.addLayout(header)
 
-        # AI recommendation banner
+        # AI recommendation feedback banner
         self.ai_banner = QLabel("")
         self.ai_banner.setFont(body_font(9))
         self.ai_banner.setWordWrap(True)
@@ -325,7 +332,7 @@ class SeatMapWidget(QWidget):
         self.grid_layout.setSpacing(4)
         layout.addWidget(self.grid_widget)
 
-        # Legend
+        # map legend for seat states
         legend = QHBoxLayout()
         for color, label in [
             (BG_CARD, "Available"),
@@ -335,7 +342,9 @@ class SeatMapWidget(QWidget):
         ]:
             dot = QLabel("■")
             dot.setFont(body_font(10))
-            dot.setStyleSheet(f"color: {color if color != BG_DARKEST else '#3A3A3A'}; background: transparent;")
+            dot.setStyleSheet(
+                f"color: {color if color != BG_DARKEST else '#3A3A3A'}; background: transparent;"
+            )
             txt = QLabel(label)
             txt.setFont(body_font(8))
             txt.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
@@ -361,22 +370,59 @@ class SeatMapWidget(QWidget):
         for seat in seats:
             rows.setdefault(seat["row_label"], []).append(seat)
 
-        for row_key in sorted(rows.keys()):
+        # add SCREEN indicator at the top of the map
+        screen_wrapper = QWidget()
+        screen_wrapper.setStyleSheet("background: transparent;")
+        screen_wrapper_layout = QHBoxLayout(screen_wrapper)
+        screen_wrapper_layout.setContentsMargins(48, 0, 48, 0)
+        screen_wrapper_layout.setSpacing(0)
+
+        screen_frame = QFrame()
+        screen_frame.setFixedHeight(28)
+        screen_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {BG_DARKEST};
+                border: 1.5px solid {BORDER};
+                border-radius: 6px;
+            }}
+        """)
+        screen_inner = QHBoxLayout(screen_frame)
+        screen_inner.setContentsMargins(0, 0, 0, 0)
+
+        screen_lbl = QLabel("SCREEN")
+        screen_lbl.setFont(body_font(8, bold=True))
+        screen_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        screen_lbl.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
+        screen_inner.addWidget(screen_lbl)
+
+        screen_wrapper_layout.addWidget(screen_frame)
+        self.grid_layout.addWidget(screen_wrapper)
+
+        # Spacer below screen
+        spacer = QWidget()
+        spacer.setFixedHeight(16)
+        spacer.setStyleSheet("background: transparent;")
+        self.grid_layout.addWidget(spacer)
+
+        # Render rows
+        sorted_keys = sorted(rows.keys())
+        for row_key in sorted_keys:
             row_seats = sorted(
                 rows[row_key],
                 key=lambda s: int(
-                    "".join(c for c in s["seat_number"][len(s["row_label"]):] if c.isdigit()) or "0"
+                    "".join(c for c in s["seat_number"][len(s["row_label"]) :] if c.isdigit())
+                    or "0"
                 ),
             )
             row_widget = QWidget()
             row_widget.setStyleSheet("background: transparent;")
             row_layout = QHBoxLayout(row_widget)
             row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(3)
+            row_layout.setSpacing(6)
 
             # Row label
             lbl = QLabel(row_key)
-            lbl.setFixedWidth(28)
+            lbl.setFixedWidth(34)
             lbl.setFont(body_font(8))
             lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             lbl.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
@@ -425,21 +471,29 @@ class SeatMapWidget(QWidget):
 
     def _update_count_label(self):
         n = self.selected_count()
-        color = SUCCESS if n == self._num_required else (ACCENT if n > self._num_required else TEXT_SECONDARY)
-        self.count_label.setStyleSheet(f"color: {color}; background: transparent; font-weight: bold;")
+        color = (
+            SUCCESS
+            if n == self._num_required
+            else (ACCENT if n > self._num_required else TEXT_SECONDARY)
+        )
+        self.count_label.setStyleSheet(
+            f"color: {color}; background: transparent; font-weight: bold;"
+        )
         self.count_label.setText(f"{n} of {self._num_required} seat(s) selected")
 
 
-# Upsell panel
+# automated staff tips and upselling panel
+
 
 class UpsellPanel(QFrame):
+    """a panel that displays context-aware sales tips to Booking Staff."""
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet(f"""
             UpsellPanel {{
-                background-color: #12181A;
-                border: 1px solid #1E3A3A;
-                border-left: 3px solid {SUCCESS};
+                background-color: {HERO_BG};
+                border: 1px solid {BORDER};
                 border-radius: {RADIUS};
             }}
         """)
@@ -449,7 +503,7 @@ class UpsellPanel(QFrame):
 
         header = QLabel("STAFF TIPS")
         header.setFont(body_font(8, bold=True))
-        header.setStyleSheet(f"color: {SUCCESS}; letter-spacing: 1.5px; background: transparent;")
+        header.setStyleSheet(f"color: {GOLD}; background: transparent;")
         self._layout.addWidget(header)
         self.hide()
 
@@ -461,10 +515,10 @@ class UpsellPanel(QFrame):
                 item.widget().deleteLater()
 
         for tip in tips:
-            lbl = QLabel(f"· {tip}")
+            lbl = QLabel(f"\u2022 {tip}")
             lbl.setFont(body_font(9))
             lbl.setWordWrap(True)
-            lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
+            lbl.setStyleSheet(f"color: {WHITE}; background: transparent;")
             self._layout.addWidget(lbl)
 
         if tips:
@@ -473,9 +527,12 @@ class UpsellPanel(QFrame):
             self.hide()
 
 
-# Confirmation dialog
+# booking confirmation modal
+
 
 class ConfirmBookingDialog(QDialog):
+    """a modal dialog for reviewing booking details before final commitment."""
+
     def __init__(self, parent, summary: dict):
         super().__init__(parent)
         self.setWindowTitle("Confirm Booking")
@@ -515,22 +572,17 @@ class ConfirmBookingDialog(QDialog):
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Confirm & Book")
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setStyleSheet(
-            f"background-color: {ACCENT}; color: white; font-weight: bold; "
-            f"border-radius: 4px; padding: 6px 16px;"
-        )
-        buttons.button(QDialogButtonBox.StandardButton.Cancel).setStyleSheet(
-            f"background-color: {BG_HOVER}; color: {TEXT_PRIMARY}; "
-            f"border: 1px solid {BORDER}; border-radius: 4px; padding: 6px 16px;"
-        )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
 
-# Main view
+# primary New Booking view implementation
+
 
 class NewBookingView(QWidget):
+    """the central view for processing new customer bookings and payments."""
+
     def __init__(self):
         super().__init__()
         self._showings_data = []
@@ -550,16 +602,24 @@ class NewBookingView(QWidget):
         self.main_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         self.main_layout.setSpacing(SPACING_MD)
 
-        self.main_layout.addWidget(heading_label("New Booking"))
+        # view header with title and service description
+        header_content = QVBoxLayout()
+        header_content.setSpacing(4)
+        header_content.addWidget(heading_label("New Booking"))
+        desc = muted_label(
+            "Create and process new customer reservations with real-time seat selection"
+        )
+        header_content.addWidget(desc)
+        self.main_layout.addLayout(header_content)
 
         columns = QHBoxLayout()
         columns.setSpacing(SPACING_LG)
 
-        # Left column
+        # left column: booking parameters and seat selection
         left = QVBoxLayout()
         left.setSpacing(SPACING_MD)
 
-        # Cinema & Film selection
+        # cinema and film selection controls
         select_card = Card()
         self.cinema_combo = QComboBox()
         self.cinema_combo.currentIndexChanged.connect(self._on_cinema_changed)
@@ -582,7 +642,7 @@ class NewBookingView(QWidget):
         select_card.add_layout(form_row("Date", self.date_edit))
         left.addWidget(select_card)
 
-        # Ticket type + availability
+        # seat type selection and availability checks
         ticket_card = Card()
         type_group_layout = QHBoxLayout()
         self.seat_type_group = QButtonGroup(self)
@@ -612,6 +672,12 @@ class NewBookingView(QWidget):
         ticket_card.add_layout(form_row("Tickets", self.num_tickets))
 
         self.check_btn = primary_button("Check Availability & Price")
+        self.check_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 200px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+        )
         self.check_btn.clicked.connect(self._check_availability)
         ticket_card.add(self.check_btn)
 
@@ -622,11 +688,11 @@ class NewBookingView(QWidget):
         ticket_card.add(self.avail_label)
         left.addWidget(ticket_card)
 
-        # Upsell tips panel
+        # AI-driven upsell tips panel
         self.upsell_panel = UpsellPanel()
         left.addWidget(self.upsell_panel)
 
-        # Seat map card
+        # interactive seat map container
         self.seat_map_card = Card()
         seat_map_title = subheading_label("Seat Map", 11)
         self.seat_map_card.add(seat_map_title)
@@ -636,7 +702,7 @@ class NewBookingView(QWidget):
         self.seat_map_card.hide()
         left.addWidget(self.seat_map_card)
 
-        # Customer details
+        # customer contact and registration details
         customer_card = Card()
         customer_card.add(subheading_label("Customer Details", 12))
         self.name_input = QLineEdit()
@@ -657,10 +723,24 @@ class NewBookingView(QWidget):
 
         btn_row = QHBoxLayout()
         self.book_btn = primary_button("Confirm Booking")
+        self.book_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 160px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+            f"QPushButton:disabled {{ background-color: {BG_DARKEST}; color: {TEXT_MUTED}; }}"
+        )
         self.book_btn.setEnabled(False)
         self.book_btn.clicked.connect(self._confirm_booking)
         btn_row.addWidget(self.book_btn)
+
         self.reset_btn = secondary_button("Reset")
+        self.reset_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 100px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         self.reset_btn.clicked.connect(self._reset_form)
         btn_row.addWidget(self.reset_btn)
         btn_row.addStretch()
@@ -668,7 +748,7 @@ class NewBookingView(QWidget):
         left.addWidget(customer_card)
         left.addStretch()
 
-        # ── Right column ──
+        # right column: booking receipt and post-booking actions
         right = QVBoxLayout()
         right.setSpacing(SPACING_MD)
 
@@ -682,39 +762,26 @@ class NewBookingView(QWidget):
         self.receipt_card.add(self.receipt_placeholder)
         right.addWidget(self.receipt_card)
 
-        # Receipt action buttons
+        # receipt management buttons (print and clipboard)
         receipt_btns = QHBoxLayout()
-        self.print_btn = QPushButton("Print Receipt")
-        self.print_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.print_btn.setFont(body_font(10, bold=True))
-        self.print_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {ACCENT};
-                color: {WHITE};
-                border: none;
-                border-radius: 6px;
-                padding: 10px 16px;
-                font-weight: 600;
-            }}
-            QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
-        """)
+        self.print_btn = primary_button("Print Receipt")
+        self.print_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 140px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+        )
         self.print_btn.clicked.connect(self._print_receipt)
         self.print_btn.hide()
         receipt_btns.addWidget(self.print_btn)
 
-        self.copy_btn = QPushButton("Copy to Clipboard")
-        self.copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.copy_btn.setFont(body_font(10))
-        self.copy_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {BG_HOVER};
-                color: {TEXT_PRIMARY};
-                border: 1px solid {BORDER};
-                border-radius: 6px;
-                padding: 10px 16px;
-            }}
-            QPushButton:hover {{ background-color: {BORDER}; }}
-        """)
+        self.copy_btn = secondary_button("Copy to Clipboard")
+        self.copy_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 160px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         self.copy_btn.clicked.connect(self._copy_receipt)
         self.copy_btn.hide()
         receipt_btns.addWidget(self.copy_btn)
@@ -731,7 +798,7 @@ class NewBookingView(QWidget):
         scroll.setWidget(content)
         outer.addWidget(scroll)
 
-    # Data loading
+    # api data retrieval methods
 
     def _load_cinemas(self):
         try:
@@ -761,9 +828,7 @@ class NewBookingView(QWidget):
             self.film_combo.clear()
             self._showings_data = []
             for item in listings:
-                self.film_combo.addItem(
-                    f"{item['title']}  (Screen {item['screen_number']})", item
-                )
+                self.film_combo.addItem(f"{item['title']}  (Screen {item['screen_number']})", item)
             self.film_combo.blockSignals(False)
             self._on_film_changed()
         except Exception as e:
@@ -830,11 +895,12 @@ class NewBookingView(QWidget):
             seat_type_label = result["seat_type"].replace("_", " ").title()
 
             if available:
-                self.avail_label.setText(
-                    f"\u2713  {seats}/{total_seats} {seat_type_label} seats available\n"
+                summary_text = (
+                    f"{seats}/{total_seats} {seat_type_label} seats available\n"
                     f"Unit price: \u00a3{unit:.2f}  \u00d7  {self.num_tickets.value()} tickets"
-                    f"  =  <b>\u00a3{total:.2f}</b>"
+                    f"  =  \u00a3{total:.2f}"
                 )
+                self.avail_label.setText(summary_text)
                 self.avail_label.setStyleSheet(
                     f"color: {SUCCESS}; background: transparent; padding: 8px;"
                 )
@@ -881,7 +947,7 @@ class NewBookingView(QWidget):
                 names = ", ".join(s["seat_number"] for s in recommended)
                 row = recommended[0]["row_label"]
                 self.seat_map_widget.set_ai_banner(
-                    f"AI Recommendation: {names} — best centre-view seats for your group of {num}"
+                    f"AI Recommendation: {names} - best centre-view seats for your group of {num}"
                 )
             else:
                 self.seat_map_widget.set_ai_banner("")
@@ -889,7 +955,7 @@ class NewBookingView(QWidget):
             self.seat_map_card.show()
             self.book_btn.setEnabled(False)  # must select seats first
 
-        except Exception as e:
+        except Exception:
             # Seat map is optional — if it fails, fall back to auto-assign
             self.seat_map_card.hide()
             self.book_btn.setEnabled(True)
@@ -953,7 +1019,9 @@ class NewBookingView(QWidget):
 
         self._create_booking(showing, name, seat_type, num, selected_ids)
 
-    def _create_booking(self, showing: dict, name: str, seat_type: str, num: int, seat_ids: List[int]):
+    def _create_booking(
+        self, showing: dict, name: str, seat_type: str, num: int, seat_ids: List[int]
+    ):
         data = {
             "showing_id": showing["showing_id"],
             "show_date": self.date_edit.date().toPyDate().isoformat(),
@@ -1065,8 +1133,8 @@ class NewBookingView(QWidget):
         if not text:
             return
         try:
-            from PyQt6.QtPrintSupport import QPrintDialog, QPrinter  # type: ignore
             from PyQt6.QtGui import QTextDocument  # type: ignore
+            from PyQt6.QtPrintSupport import QPrintDialog, QPrinter  # type: ignore
 
             printer = QPrinter(QPrinter.PrinterMode.HighResolution)
             dialog = QPrintDialog(printer, self)
@@ -1109,6 +1177,12 @@ class NewBookingView(QWidget):
             item = self.receipt_card._layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+            elif item.layout():
+                while item.layout().count():
+                    sub = item.layout().takeAt(0)
+                    if sub.widget():
+                        sub.widget().deleteLater()
+
         self.receipt_placeholder = muted_label("Receipt will appear here after booking.")
         self.receipt_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.receipt_placeholder.setMinimumHeight(200)

@@ -1,6 +1,7 @@
 """
 desktop/ui/windows/booking_staff/cancellation.py
-Cancel a booking by reference. Shows booking details before confirming.
+implements the Booking Cancellation view for Booking Staff.
+facilitates booking lookups by reference, fee calculations, and cancellation processing.
 """
 
 from PyQt6.QtWidgets import (  # type: ignore
@@ -14,10 +15,14 @@ from PyQt6.QtWidgets import (  # type: ignore
 
 from desktop.api_client import api
 from desktop.ui.theme import (
+    ACCENT,
+    BORDER,
     DANGER,
+    HERO_BG,
     SPACING_LG,
     SPACING_MD,
     TEXT_SECONDARY,
+    WHITE,
     body_font,
 )
 from desktop.ui.widgets import (
@@ -27,6 +32,7 @@ from desktop.ui.widgets import (
     error_dialog,
     heading_label,
     labelled_value,
+    muted_label,
     primary_button,
     separator,
     show_toast,
@@ -36,12 +42,16 @@ from desktop.ui.widgets import (
 
 
 class CancellationView(QWidget):
+    """a view that enables staff to search for bookings and process cancellations with automated fee calculations."""
+
     def __init__(self):
+        """initialises the view and prepares the internal booking state."""
         super().__init__()
         self._booking = None
         self._build_ui()
 
     def _build_ui(self):
+        """constructs the primary layout including the search interface and dynamic result cards."""
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 
@@ -54,35 +64,51 @@ class CancellationView(QWidget):
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
 
-        layout.addWidget(heading_label("Booking Cancellation"))
-        layout.addWidget(separator())
+        # header section with view title and cancellation service description
+        header_content = QVBoxLayout()
+        header_content.setSpacing(4)
+        header_content.addWidget(heading_label("Booking Cancellation"))
+        desc = muted_label(
+            "Search and process booking voidance, fee calculations, and customer refunds"
+        )
+        header_content.addWidget(desc)
+        layout.addLayout(header_content)
 
-        # Search bar
+        # search card for entering the Booking Reference
         search_card = Card()
-        search_row = QHBoxLayout()
+        search_card.setFixedWidth(400)
+
+        ref_lbl = QLabel("Booking Reference")
+        ref_lbl.setFont(body_font(10, bold=True))
+        ref_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; margin-bottom: 2px;"
+        )
+        search_card.add(ref_lbl)
 
         self.ref_input = QLineEdit()
-        self.ref_input.setPlaceholderText("Enter booking reference (e.g. HC-2025-00001)")
-        self.ref_input.setFixedWidth(360)
-        ref_lbl = QLabel("Reference:")
-        ref_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        search_row.addWidget(ref_lbl)
-        search_row.addWidget(self.ref_input)
+        self.ref_input.setPlaceholderText("e.g. HC-2025-00001")
+        self.ref_input.setStyleSheet(
+            f"border: 1.5px solid {BORDER}; border-radius: 8px; min-height: 34px; max-height: 34px; padding: 0 10px;"
+        )
+        search_card.add(self.ref_input)
 
-        self.search_btn = primary_button("Look Up")
+        self.search_btn = primary_button("Look Up Booking")
+        self.search_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; font-weight: 700; border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         self.search_btn.clicked.connect(self._lookup_booking)
-        search_row.addWidget(self.search_btn)
-        search_row.addStretch()
+        search_card.add(self.search_btn)
 
-        search_card.add_layout(search_row)
         layout.addWidget(search_card)
 
-        # Booking details
+        # dynamic card for displaying retrieved booking details
         self.details_card = Card()
         self.details_card.hide()
         layout.addWidget(self.details_card)
 
-        # Cancel result
+        # dynamic card for displaying cancellation results
         self.result_card = Card()
         self.result_card.hide()
         layout.addWidget(self.result_card)
@@ -95,6 +121,7 @@ class CancellationView(QWidget):
         outer.addWidget(scroll)
 
     def _lookup_booking(self):
+        """fetches booking details from the api using the provided reference."""
         ref = self.ref_input.text().strip()
         if not ref:
             error_dialog(self, "Please enter a booking reference.")
@@ -116,11 +143,28 @@ class CancellationView(QWidget):
                     pass
             error_dialog(self, detail)
 
-    def _show_details(self, b: dict):
-        while self.details_card._layout.count():
-            item = self.details_card._layout.takeAt(0)
+    def _clear_card(self, card: Card):
+        """recursively removes all widgets and layouts from a Card to prepare for new data."""
+        layout = card._layout
+        while layout.count():
+            item = layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+            elif item.layout():
+                self._clear_sub_layout(item.layout())
+
+    def _clear_sub_layout(self, layout):
+        """recursively clears a sub-layout of all nested items."""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_sub_layout(item.layout())
+
+    def _show_details(self, b: dict):
+        """populates the details card with comprehensive information about the retrieved booking."""
+        self._clear_card(self.details_card)
 
         title_row = QHBoxLayout()
         title_row.addWidget(subheading_label("Booking Details", 13))
@@ -176,12 +220,16 @@ class CancellationView(QWidget):
             self.details_card.add(warn)
 
             cancel_btn = danger_button("Cancel This Booking")
+            cancel_btn.setStyleSheet(
+                f"background-color: {ACCENT}; color: {WHITE}; border: none; min-height: 34px; max-height: 34px;"
+            )
             cancel_btn.clicked.connect(self._cancel_booking)
             self.details_card.add(cancel_btn)
 
         self.details_card.show()
 
     def _cancel_booking(self):
+        """initiates the cancellation process after user confirmation via a QDialog."""
         if not self._booking:
             return
 
@@ -197,9 +245,10 @@ class CancellationView(QWidget):
 
         try:
             result = api.cancel_booking(ref)
+            self.details_card.hide()  # Hide the old details to avoid clutter
             self._show_cancel_result(result)
             show_toast(self, result.get("message", "Booking cancelled."), success=True)
-            self._lookup_booking()
+            # No need to call _lookup_booking here as result_card shows the outcome
         except Exception as e:
             detail = str(e)
             if hasattr(e, "response"):
@@ -210,10 +259,8 @@ class CancellationView(QWidget):
             error_dialog(self, detail)
 
     def _show_cancel_result(self, result: dict):
-        while self.result_card._layout.count():
-            item = self.result_card._layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        """updates the UI to show the outcome of the cancellation including fees and refunds."""
+        self._clear_card(self.result_card)
 
         self.result_card.add(subheading_label("Cancellation Processed", 12))
         self.result_card.add(separator())

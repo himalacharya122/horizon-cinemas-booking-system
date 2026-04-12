@@ -1,7 +1,12 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/widgets.py
-Reusable UI components: buttons, cards, form rows, badges, toast messages.
-Light cinema theme.
+reusable UI components including buttons, cards, form rows, badges, and toast messages for the Horizon Cinemas theme.
 """
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer  # type: ignore
@@ -18,6 +23,7 @@ from PyQt6.QtWidgets import (  # type: ignore
 
 from desktop.ui.theme import (
     ACCENT,
+    ACCENT_HOVER,
     BG_CARD,
     BORDER,
     DANGER,
@@ -32,18 +38,20 @@ from desktop.ui.theme import (
     heading_font,
 )
 
-# Buttons
+# button components
 
 
 def primary_button(text: str, icon_text: str = "") -> QPushButton:
+    """creates a primary action button with Horizon Red styling."""
     btn = QPushButton(f"  {icon_text}  {text}  " if icon_text else text)
     btn.setProperty("primary", True)
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
-    btn.setStyleSheet(btn.styleSheet())  # force property re-eval
+    btn.setStyleSheet(btn.styleSheet())  # force property re-evaluation
     return btn
 
 
 def secondary_button(text: str) -> QPushButton:
+    """creates a subtle secondary action button."""
     btn = QPushButton(text)
     btn.setProperty("secondary", True)
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -51,16 +59,18 @@ def secondary_button(text: str) -> QPushButton:
 
 
 def danger_button(text: str) -> QPushButton:
+    """creates a high-visibility button for destructive actions."""
     btn = QPushButton(text)
     btn.setProperty("danger", True)
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
     return btn
 
 
-# Labels
+# label components
 
 
 def heading_label(text: str, size: int = 18) -> QLabel:
+    """returns a large QLabel styled as a main heading."""
     lbl = QLabel(text)
     lbl.setProperty("heading", True)
     lbl.setFont(heading_font(size))
@@ -69,6 +79,7 @@ def heading_label(text: str, size: int = 18) -> QLabel:
 
 
 def subheading_label(text: str, size: int = 13) -> QLabel:
+    """returns a bold QLabel styled as a section subheading."""
     lbl = QLabel(text)
     lbl.setProperty("subheading", True)
     lbl.setFont(heading_font(size, bold=True))
@@ -77,6 +88,7 @@ def subheading_label(text: str, size: int = 13) -> QLabel:
 
 
 def muted_label(text: str) -> QLabel:
+    """returns a smaller QLabel with secondary text colouring."""
     lbl = QLabel(text)
     lbl.setProperty("muted", True)
     lbl.setFont(body_font(10))
@@ -85,28 +97,28 @@ def muted_label(text: str) -> QLabel:
 
 
 def badge_label(text: str, colour: str = ACCENT) -> QLabel:
-    """Small coloured tag/badge."""
+    """creates a small coloured tag or badge for status indicators."""
     lbl = QLabel(f"  {text}  ")
     lbl.setFont(body_font(9))
     lbl.setStyleSheet(
         f"background-color: {colour}; color: {WHITE}; "
-        f"border-radius: 4px; padding: 2px 8px; font-weight: 600;"
+        f"border-radius: 4px; padding: 4px 8px; font-weight: 600;"
     )
-    lbl.setFixedHeight(22)
+    lbl.setFixedHeight(26)
     return lbl
 
 
 def status_badge(status: str) -> QLabel:
-    """Booking status badge — confirmed (teal) or cancelled (coral)."""
+    """specialised badge for booking status: confirmed (SUCCESS) or cancelled (DANGER)."""
     colour = SUCCESS if status == "confirmed" else DANGER
     return badge_label(status.capitalize(), colour)
 
 
-# Cards
+# card containers
 
 
 class Card(QFrame):
-    """A dark bordered card container with rounded corners."""
+    """a rounded container with a subtle border for grouping UI elements."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -120,19 +132,21 @@ class Card(QFrame):
         self._layout.setSpacing(SPACING_SM)
 
     def add(self, widget):
+        """adds a widget to the card layout."""
         self._layout.addWidget(widget)
         return widget
 
     def add_layout(self, layout):
+        """adds a nested layout to the card."""
         self._layout.addLayout(layout)
         return layout
 
 
-# Form helpers
+# form layout helpers
 
 
 def form_row(label_text: str, widget: QWidget, stretch: bool = True) -> QHBoxLayout:
-    """Standard form row: label on left, widget on right."""
+    """creates a standard row with a fixed-width QLabel on the left and a widget on the right."""
     row = QHBoxLayout()
     lbl = QLabel(label_text)
     lbl.setFont(body_font(11))
@@ -147,7 +161,7 @@ def form_row(label_text: str, widget: QWidget, stretch: bool = True) -> QHBoxLay
 
 
 def labelled_value(label: str, value: str) -> QHBoxLayout:
-    """Read-only label: value pair (for receipts, details, etc.)."""
+    """displays a read-only label and value pair, often used for details or receipts."""
     row = QHBoxLayout()
     lbl = QLabel(label)
     lbl.setFont(body_font(10))
@@ -162,21 +176,23 @@ def labelled_value(label: str, value: str) -> QHBoxLayout:
     return row
 
 
-# Separator
+# visual separator
 
 
 def separator() -> QFrame:
+    """returns a clean horizontal line to divide sections."""
     line = QFrame()
     line.setFrameShape(QFrame.Shape.HLine)
-    line.setStyleSheet(f"background-color: {BORDER}; max-height: 1px;")
+    line.setFrameShadow(QFrame.Shadow.Plain)
+    line.setStyleSheet(f"background-color: {BORDER}; max-height: 1px; border: none;")
     return line
 
 
-# Toast notification
+# toast notifications
 
 
 class Toast(QLabel):
-    """Temporary notification that fades out automatically."""
+    """temporary notification that slides and fades out after a duration."""
 
     def __init__(self, parent, message: str, colour: str = TEXT_PRIMARY, duration: int = 3000):
         super().__init__(message, parent)
@@ -190,13 +206,13 @@ class Toast(QLabel):
         self.adjustSize()
         self.setMinimumWidth(300)
 
-        # Position at bottom centre of parent
+        # position at bottom centre of parent window
         px = (parent.width() - self.width()) // 2
         py = parent.height() - 80
         self.move(px, py)
         self.show()
 
-        # Fade out
+        # setup opacity effect for fading
         self._effect = QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(self._effect)
         self._effect.setOpacity(1.0)
@@ -204,6 +220,7 @@ class Toast(QLabel):
         QTimer.singleShot(duration, self._fade_out)
 
     def _fade_out(self):
+        """starts the fade-out animation and deletes the widget upon completion."""
         self._anim = QPropertyAnimation(self._effect, b"opacity")
         self._anim.setDuration(400)
         self._anim.setStartValue(1.0)
@@ -214,27 +231,88 @@ class Toast(QLabel):
 
 
 def show_toast(parent, message: str, success: bool = True, duration: int = 3000):
+    """helper function to instantiate a Toast notification."""
     colour = SUCCESS if success else DANGER
     Toast(parent, message, colour, duration)
 
 
-# Message boxes
+# modal dialogs
+
+
+def _style_dialog(msg_box: QMessageBox):
+    """applies custom styling to QMessageBox to match the application theme."""
+    from PyQt6.QtWidgets import QDialogButtonBox  # type: ignore
+
+    # sizing is driven by stylesheets to prevent layout clipping
+    msg_box.setStyleSheet(
+        f"QMessageBox {{"
+        f"  background-color: {WHITE};"
+        f"}}"
+        f"QMessageBox QDialogButtonBox {{"
+        f"  padding: 8px 0px 16px 0px;"
+        f"}}"
+        f"QMessageBox QPushButton {{"
+        f"  min-height: 34px;"
+        f"  min-width: 110px;"
+        f"  padding: 6px 16px;"
+        f"  border-radius: 6px;"
+        f"  font-weight: 700;"
+        f"  font-family: 'Manrope';"
+        f"  font-size: 10pt;"
+        f"  border: none;"
+        f"}}"
+    )
+
+    bbox = msg_box.findChild(QDialogButtonBox)
+    if bbox:
+        bbox.setCenterButtons(True)
+
+    # button-specific styling based on action type
+    for btn in msg_box.findChildren(QPushButton):
+        text = btn.text().lower()
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        if any(keyword in text for keyword in ["yes", "ok", "save", "confirm"]):
+            btn.setStyleSheet(
+                f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; }}"
+                f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+            )
+        else:
+            btn.setStyleSheet(
+                f"QPushButton {{ background-color: {TEXT_SECONDARY}; color: {WHITE}; }}"
+                f"QPushButton:hover {{ background-color: #4A4A48; }}"
+            )
 
 
 def confirm_dialog(parent, title: str, message: str) -> bool:
-    reply = QMessageBox.question(
-        parent,
-        title,
-        message,
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        QMessageBox.StandardButton.No,
-    )
-    return reply == QMessageBox.StandardButton.Yes
+    """shows a confirmation dialog with Yes/No options."""
+    msg = QMessageBox(parent)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.setIcon(QMessageBox.Icon.Question)
+    msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+    msg.setDefaultButton(QMessageBox.StandardButton.No)
+    _style_dialog(msg)
+    return msg.exec() == QMessageBox.StandardButton.Yes
 
 
 def error_dialog(parent, message: str, title: str = "Error"):
-    QMessageBox.critical(parent, title, message)
+    """displays an error message in a styled modal."""
+    msg = QMessageBox(parent)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.setIcon(QMessageBox.Icon.Critical)
+    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+    _style_dialog(msg)
+    msg.exec()
 
 
 def info_dialog(parent, message: str, title: str = "Information"):
-    QMessageBox.information(parent, title, message)
+    """displays informational text in a styled modal."""
+    msg = QMessageBox(parent)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.setIcon(QMessageBox.Icon.Information)
+    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+    _style_dialog(msg)
+    msg.exec()

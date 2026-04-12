@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/theme.py
 Horizon Cinemas — light theme with red accent.
@@ -12,74 +18,78 @@ Palette (from design system):
   Danger       — #EF4444
 
 Fonts:
-  Manrope → headings, brand, all body text
+  Manrope -> headings, brand, all body text
 """
 
 from pathlib import Path
 
 from PyQt6.QtGui import QFont, QFontDatabase  # type: ignore
 
-# Backgrounds
-BG_DARKEST = "#FAFAF9"   # page / window background   (ink-50)
-BG_DARK    = "#F1F1EF"   # sidebar, panels            (ink-100)
-BG_CARD    = "#FFFFFF"   # card surfaces              (white)
-BG_INPUT   = "#FAFAF9"   # input fields               (ink-50)
-BG_HOVER   = "#F1F1EF"   # hover state                (ink-100)
+# background colours
+BG_DARKEST = "#FAFAF9"  # primary window background
+BG_DARK = "#F1F1EF"  # sidebar and panel backgrounds
+BG_CARD = "#FFFFFF"  # card surface background
+BG_INPUT = "#FAFAF9"  # input field background
+BG_HOVER = "#F1F1EF"  # state for hovered elements
 
-# Borders
-BORDER       = "#E4E3E0"  # default borders            (ink-200)
-BORDER_LIGHT = "#F1F1EF"  # subtle / inner borders     (ink-100)
+# border colours
+BORDER = "#E4E3E0"  # standard border colour
+BORDER_LIGHT = "#F1F1EF"  # subtle or inner borders
 
-# Text
-TEXT_PRIMARY   = "#0A0908"  # headings, body            (ink-900)
-TEXT_SECONDARY = "#2E2C28"  # labels, secondary copy    (ink-700)
-TEXT_MUTED     = "#6E6C68"  # placeholders, captions    (ink-500)
+# text colours
+TEXT_PRIMARY = "#0A0908"  # main text and headings
+TEXT_SECONDARY = "#2E2C28"  # labels and secondary copy
+TEXT_MUTED = "#6E6C68"  # placeholders and caption text
 
-# Accent (Horizon red)
-ACCENT       = "#B91C1C"   # primary red
-ACCENT_HOVER = "#991B1B"   # hover / pressed
-ACCENT_LIGHT = "#FEF2F2"   # tinted background for red accents
+# branding accent (Horizon Red)
+ACCENT = "#B91C1C"  # main brand red
+ACCENT_HOVER = "#991B1B"  # hover state for accent buttons
+ACCENT_LIGHT = "#FEF2F2"  # subtle background tint
 
-# Hero (dark brand panel — login left side, nav bar)
-HERO_BG = "#0A0908"   # ink-900
-HERO_FG = "#FFFFFF"   # text on hero
+# hero panels (dark branding sections)
+HERO_BG = "#0A0908"  # dark background for login and navigation
+HERO_FG = "#FFFFFF"  # contrasting text for hero sections
 
-# Supporting
-GOLD          = "#C8A04A"   # highlights, gold badges
-SUCCESS       = "#10B981"   # confirmed / positive
-DANGER        = "#EF4444"   # errors / destructive
-DANGER_HOVER  = "#DC2626"
+# functional status colours
+GOLD = "#C8A04A"  # premium highlights or gold badges
+SUCCESS = "#10B981"  # indicators for confirmed or positive actions
+DANGER = "#EF4444"  # error messages or destructive actions
+DANGER_HOVER = "#DC2626"  # hover state for danger buttons
 
-# Legacy aliases kept for backward compatibility
-WHITE         = "#FFFFFF"
-SNOW          = BG_CARD
-SILVER        = BORDER
-SMOKE         = TEXT_SECONDARY
-SLATE         = TEXT_MUTED
-CHARCOAL      = TEXT_PRIMARY
-BLACK         = "#0A0908"
+# legacy aliases for backward compatibility
+WHITE = "#FFFFFF"
+SNOW = BG_CARD
+SILVER = BORDER
+SMOKE = TEXT_SECONDARY
+SLATE = TEXT_MUTED
+CHARCOAL = TEXT_PRIMARY
+BLACK = "#0A0908"
 ACCENT_LIGHT_LEGACY = ACCENT_LIGHT
 
-# Font Loading
-FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+# resource loading
+ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+ARROW_SVG = (ASSETS_DIR / "dropdown_arrow.svg").as_posix()
+UP_ARROW_SVG = (ASSETS_DIR / "up_arrow.svg").as_posix()
+
 _fonts_loaded = False
 
 
 def load_fonts():
-    """Load Manrope from the local fonts directory."""
+    """loads the Manrope font family from the local assets directory."""
     global _fonts_loaded
     if _fonts_loaded:
         return
     _fonts_loaded = True
-    if not FONTS_DIR.exists():
+    fonts_dir = ASSETS_DIR / "fonts"
+    if not fonts_dir.exists():
         return
-    for font_file in FONTS_DIR.rglob("*"):
+    for font_file in fonts_dir.rglob("*"):
         if font_file.suffix.lower() in (".ttf", ".otf"):
             QFontDatabase.addApplicationFont(str(font_file))
 
 
 def heading_font(size: int = 16, bold: bool = True) -> QFont:
-    """Manrope — headings, brand, navigation."""
+    """returns a QFont using the Manrope family, suitable for headings."""
     f = QFont("Manrope", size)
     if bold:
         f.setBold(True)
@@ -87,15 +97,15 @@ def heading_font(size: int = 16, bold: bool = True) -> QFont:
 
 
 def body_font(size: int = 11, bold: bool = False) -> QFont:
-    """Manrope — body text, labels, inputs."""
+    """returns a QFont using the Manrope family, suitable for body text and labels."""
     f = QFont("Manrope", size)
     if bold:
         f.setBold(True)
     return f
 
 
-# Spacing / Sizing
-RADIUS    = "8px"
+# layout spacing and element sizing
+RADIUS = "8px"
 RADIUS_LG = "12px"
 SPACING_XS = 4
 SPACING_SM = 8
@@ -104,9 +114,9 @@ SPACING_LG = 24
 SPACING_XL = 32
 
 INPUT_HEIGHT = "38px"
-BTN_HEIGHT   = "40px"
+BTN_HEIGHT = "40px"
 
-# Global QSS — Light Cinema Theme
+# global QSS style sheet for the light cinema theme
 GLOBAL_QSS = f"""
 /* Base */
 QMainWindow, QDialog {{
@@ -152,22 +162,22 @@ QLabel[muted="true"] {{
 
 /* Inputs */
 QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QTimeEdit {{
-    background-color: {BG_INPUT};
-    border: 1.5px solid {BORDER};
-    border-radius: {RADIUS};
-    padding: 6px 12px;
-    min-height: {INPUT_HEIGHT};
+    background-color: {WHITE};
+    border: 1px solid {BORDER};
+    border-radius: 6px;
+    padding: 0 10px;
+    min-height: 34px;
+    max-height: 34px;
     color: {TEXT_PRIMARY};
-    font-size: 11pt;
+    font-size: 10pt;
     selection-background-color: {ACCENT};
     selection-color: {WHITE};
 }}
 
 QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus,
 QDateEdit:focus, QTimeEdit:focus {{
-    border: 1.5px solid {ACCENT};
+    border: 1px solid {ACCENT};
     background-color: {WHITE};
-    outline: none;
 }}
 
 QLineEdit:disabled, QSpinBox:disabled {{
@@ -179,28 +189,85 @@ QLineEdit[echoMode="2"] {{
     lineedit-password-character: 9679;
 }}
 
+/* SpinBox — properly sized up/down buttons */
+QSpinBox, QDoubleSpinBox {{
+    padding-right: 22px;   /* reserve room for the button column */
+}}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button {{
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 22px;
+    height: 17px;
+    border-left: 1px solid {BORDER};
+    border-bottom: 1px solid {BORDER};
+    border-top-right-radius: 6px;
+    background-color: {WHITE};
+}}
+
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover {{
+    background-color: {BG_DARK};
+}}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
+    image: url("{UP_ARROW_SVG}");
+    width: 10px;
+    height: 10px;
+}}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 22px;
+    height: 17px;
+    border-left: 1px solid {BORDER};
+    border-bottom-right-radius: 6px;
+    background-color: {WHITE};
+}}
+
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {{
+    background-color: {BG_DARK};
+}}
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
+    image: url("{ARROW_SVG}");
+    width: 10px;
+    height: 10px;
+}}
+
+
 /* ComboBox */
 QComboBox {{
-    background-color: {BG_INPUT};
-    border: 1.5px solid {BORDER};
-    border-radius: {RADIUS};
-    padding: 6px 12px;
-    min-height: {INPUT_HEIGHT};
+    background-color: {WHITE};
+    border: 1px solid {BORDER};
+    border-radius: 6px;
+    padding: 0 10px;
+    min-height: 34px;
+    max-height: 34px;
     color: {TEXT_PRIMARY};
-    font-size: 11pt;
+    font-size: 10pt;
 }}
 
 QComboBox:focus {{
     border-color: {ACCENT};
+    background-color: {WHITE};
 }}
 
 QComboBox::drop-down {{
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 28px;
-    border-left: 1px solid {BORDER};
-    border-top-right-radius: {RADIUS};
-    border-bottom-right-radius: {RADIUS};
+    width: 30px;
+    border: none;
+}}
+
+QComboBox::down-arrow {{
+    image: url("{ARROW_SVG}");
+    width: 12px;
+    height: 12px;
+}}
+
+QComboBox::down-arrow:on {{
+    image: url("{ARROW_SVG}");
 }}
 
 QComboBox QAbstractItemView {{
@@ -209,7 +276,151 @@ QComboBox QAbstractItemView {{
     selection-background-color: {ACCENT_LIGHT};
     selection-color: {TEXT_PRIMARY};
     color: {TEXT_PRIMARY};
-    outline: 0;
+    outline: none;
+    padding: 4px;
+}}
+
+QComboBox QAbstractItemView::item {{
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 1px 0;
+    border-bottom: 1px solid {BORDER_LIGHT};
+}}
+
+QComboBox QAbstractItemView::item:selected {{
+    background-color: {ACCENT_LIGHT};
+    color: {ACCENT};
+    border-bottom: 1px solid transparent;
+}}
+
+/* ── Calendar Widget ─────────────────────────────────────── */
+
+/* Navigation bar — flex-like row, vertically centred */
+QCalendarWidget QWidget#qt_calendar_navigationbar {{
+    background-color: {BG_DARK};
+    border-bottom: 1px solid {BORDER};
+    min-height: 44px;
+    max-height: 44px;
+}}
+
+/* Prev / Next arrow buttons — vertically centred inside the nav bar */
+QCalendarWidget QToolButton#qt_calendar_prevmonth,
+QCalendarWidget QToolButton#qt_calendar_nextmonth {{
+    color: {TEXT_PRIMARY};
+    font-size: 14pt;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    padding: 0px;
+    margin: 8px 4px;          /* top+bottom margin centres them in the 44px bar */
+    min-width: 28px;
+    max-width: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    background: transparent;
+    qproperty-iconSize: 0px;  /* hide the default icon so only text/arrow shows  */
+}}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth:hover,
+QCalendarWidget QToolButton#qt_calendar_nextmonth:hover {{
+    background-color: {BORDER};
+}}
+
+/* Month / year button in the centre of the nav bar */
+QCalendarWidget QToolButton#qt_calendar_monthbutton,
+QCalendarWidget QToolButton#qt_calendar_yearbutton {{
+    color: {TEXT_PRIMARY};
+    font-family: "Manrope";
+    font-size: 11pt;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    padding: 0px 26px 0px 6px;  /* right padding creates gap between text and arrow */
+    margin: 8px 2px;
+    min-height: 28px;
+    max-height: 28px;
+    background: transparent;
+}}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton:hover,
+QCalendarWidget QToolButton#qt_calendar_yearbutton:hover {{
+    background-color: {BG_HOVER};
+}}
+
+/* Drop-down arrow on the month button — padding-right on button makes room for gap */
+QCalendarWidget QToolButton::menu-indicator {{
+    image: url("{ARROW_SVG}");
+    width: 10px;
+    height: 10px;
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+    right: 4px;
+}}
+
+QCalendarWidget QMenu {{
+    background-color: {WHITE};
+    border: 1px solid {BORDER};
+    font-family: "Manrope";
+    font-size: 10pt;
+}}
+
+QCalendarWidget QSpinBox {{
+    width: 70px;
+    font-family: "Manrope";
+    font-size: 10pt;
+    color: {TEXT_PRIMARY};
+    background-color: {WHITE};
+    selection-background-color: {ACCENT};
+    selection-color: {WHITE};
+    border: 1px solid {BORDER};
+    border-radius: 4px;
+    min-height: 28px;
+    max-height: 28px;
+    margin: 8px 2px;
+}}
+
+/* Day-of-week header row */
+QCalendarWidget QAbstractItemView {{
+    font-family: "Manrope";
+    font-size: 10pt;
+    background-color: {WHITE};
+    outline: none;
+}}
+
+/* The actual date grid table */
+QCalendarWidget QTableView {{
+    background-color: {WHITE};
+    alternate-background-color: {WHITE};
+    selection-background-color: {ACCENT};
+    selection-color: {WHITE};
+    border: none;
+}}
+
+/* Selectable dates — dark, bold, clearly clickable */
+QCalendarWidget QTableView::item:enabled {{
+    color: {TEXT_PRIMARY};
+    font-weight: 600;
+    background-color: transparent;
+    border-radius: 4px;
+}}
+
+QCalendarWidget QTableView::item:enabled:hover {{
+    background-color: {ACCENT_LIGHT};
+    color: {ACCENT};
+}}
+
+QCalendarWidget QTableView::item:enabled:selected {{
+    background-color: {ACCENT};
+    color: {WHITE};
+    border-radius: 4px;
+}}
+
+/* Out-of-range / past dates — visually muted, no hover effect */
+QCalendarWidget QTableView::item:disabled {{
+    color: #C8C6C2;
+    font-weight: 400;
+    font-style: italic;
+    background-color: transparent;
 }}
 
 /* Buttons */
@@ -242,10 +453,6 @@ QPushButton[primary="true"] {{
 
 QPushButton[primary="true"]:hover {{
     background-color: {ACCENT_HOVER};
-}}
-
-QPushButton[primary="true"]:pressed {{
-    background-color: #7F1D1D;
 }}
 
 QPushButton[secondary="true"] {{
@@ -438,23 +645,6 @@ QTextEdit, QPlainTextEdit {{
     padding: 8px;
     color: {TEXT_PRIMARY};
     font-size: 10pt;
-}}
-
-/* Calendar */
-QCalendarWidget {{
-    background-color: {WHITE};
-    color: {TEXT_PRIMARY};
-}}
-
-QCalendarWidget QAbstractItemView {{
-    background-color: {WHITE};
-    color: {TEXT_PRIMARY};
-    selection-background-color: {ACCENT};
-    selection-color: {WHITE};
-}}
-
-QCalendarWidget QWidget#qt_calendar_navigationbar {{
-    background-color: {BG_DARK};
 }}
 
 /* Tooltips */

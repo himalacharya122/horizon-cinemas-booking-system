@@ -1,15 +1,17 @@
 """
 desktop/ui/windows/admin/manage_users.py
-Admin view: staff user management — view, reset passwords, activity logs.
+implements the staff user management interface for Administrators to audit account activity and manage security credentials.
 """
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (  # type: ignore
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -18,11 +20,18 @@ from PyQt6.QtWidgets import (  # type: ignore
 
 from desktop.api_client import api
 from desktop.ui.theme import (
+    ACCENT,
+    ACCENT_HOVER,
+    BG_CARD,
+    BORDER,
+    DANGER,
+    HERO_BG,
     SPACING_LG,
     SPACING_MD,
     TEXT_MUTED,
+    TEXT_PRIMARY,
     TEXT_SECONDARY,
-    body_font,
+    WHITE,
 )
 from desktop.ui.widgets import (
     confirm_dialog,
@@ -32,51 +41,96 @@ from desktop.ui.widgets import (
     muted_label,
     primary_button,
     secondary_button,
-    separator,
     show_toast,
 )
 
 
+class _LeftPaddingDelegate(QStyledItemDelegate):
+    """a specialized item delegate to apply left padding to table cell content."""
+
+    def __init__(self, padding: int = 14, parent=None):
+        super().__init__(parent)
+        self.padding = padding
+
+    def paint(self, painter, option, index):
+        padded = QStyleOptionViewItem(option)
+        padded.rect.adjust(self.padding, 0, 0, 0)
+        super().paint(painter, padded, index)
+
+
 class ManageUsersView(QWidget):
+    """a view for managing cinema staff accounts, including password resets and activity auditing."""
+
     def __init__(self):
+        """initialises the user management view and loads account data."""
         super().__init__()
         self._users = []
         self._build_ui()
         self._load_data()
 
     def _build_ui(self):
+        """constructs the primary interface including account headers, filters, and the users table."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
 
+        # header section with view title and account management description
+        header_content = QVBoxLayout()
+        header_content.setSpacing(4)
+        header_content.addWidget(heading_label("Manage Users"))
+        desc = muted_label("Staff account management, password resets, and activity audit trails")
+        header_content.addWidget(desc)
+
         header = QHBoxLayout()
-        header.addWidget(heading_label("Manage Users"))
+        header.addLayout(header_content)
         header.addStretch()
 
-        # Filters
+        _combo_style = (
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
+            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"
+            f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
+            f"QComboBox::drop-down {{ border: none; width: 24px; }}"
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
+        )
+
+        # filter controls for cinema and role-based searching
         lbl_cinema = QLabel("Cinema:")
-        lbl_cinema.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
+        lbl_cinema.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 600;"
+        )
         header.addWidget(lbl_cinema)
         self.cinema_filter = QComboBox()
         self.cinema_filter.setFixedWidth(220)
+        self.cinema_filter.setStyleSheet(_combo_style)
+        self.cinema_filter.setFixedHeight(34)
         self.cinema_filter.currentIndexChanged.connect(self._load_users)
         header.addWidget(self.cinema_filter)
 
         lbl_role = QLabel("Role:")
-        lbl_role.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
+        lbl_role.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 600;"
+        )
         header.addWidget(lbl_role)
         self.role_filter = QComboBox()
         self.role_filter.addItems(["All Roles", "booking_staff", "admin", "manager"])
         self.role_filter.setFixedWidth(150)
+        self.role_filter.setStyleSheet(_combo_style)
+        self.role_filter.setFixedHeight(34)
         self.role_filter.currentIndexChanged.connect(self._load_users)
         header.addWidget(self.role_filter)
 
         refresh_btn = secondary_button("Refresh")
+        refresh_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 90px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         refresh_btn.clicked.connect(self._load_data)
         header.addWidget(refresh_btn)
 
         layout.addLayout(header)
-        layout.addWidget(separator())
 
         # Users table
         self.table = QTableWidget()
@@ -84,26 +138,64 @@ class ManageUsersView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(44)
+        self.table.setShowGrid(False)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.setColumnCount(8)
         self.table.setHorizontalHeaderLabels(
             ["ID", "Username", "Full Name", "Email", "Role", "Cinema", "Status", "Last Login"]
         )
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+
+        hh = self.table.horizontalHeader()
+        hh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(2, 170)  # Full Name
+        hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)  # Email
+        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Cinema
+        hh.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)
+
+        self.table.setStyleSheet(
+            f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
+        )
+        self.table.setItemDelegate(_LeftPaddingDelegate(14, self.table))
         layout.addWidget(self.table, 1)
 
         # Action buttons
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
 
         reset_btn = primary_button("Reset Password")
+        reset_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 140px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+        )
         reset_btn.clicked.connect(self._reset_password)
         btn_row.addWidget(reset_btn)
 
         toggle_btn = danger_button("Toggle Active")
+        toggle_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {DANGER}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 130px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #B91C1C; }}"
+        )
         toggle_btn.clicked.connect(self._toggle_active)
         btn_row.addWidget(toggle_btn)
 
         activity_btn = secondary_button("View Activity")
+        activity_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 120px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         activity_btn.clicked.connect(self._view_activity)
         btn_row.addWidget(activity_btn)
 
@@ -237,30 +329,65 @@ class ActivityDialog(QDialog):
     def __init__(self, parent, user: dict, activity: list):
         super().__init__(parent)
         self.setWindowTitle(f"Activity — {user['full_name']}")
-        self.setMinimumSize(700, 500)
+        self.setMinimumSize(800, 560)
+        self.setStyleSheet(f"QDialog {{ background: {BG_CARD}; }}")
         self._build(user, activity)
 
     def _build(self, user: dict, activity: list):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(SPACING_MD)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        info = QLabel(
-            f"Staff: {user['full_name']}  |  Username: {user['username']}  |  "
-            f"Cinema: {user['cinema_name']}"
+        # Header
+        header = QWidget()
+        header.setObjectName("modalHeader")
+        header.setStyleSheet(f"QWidget#modalHeader {{ background: {WHITE}; }}")
+        hl = QVBoxLayout(header)
+        hl.setContentsMargins(24, 20, 24, 16)
+        hl.setSpacing(4)
+        title_lbl = QLabel(f"{user['full_name']} — Activity Log")
+        title_lbl.setStyleSheet(
+            f"color: {TEXT_PRIMARY}; font-size: 14pt; font-weight: 700; "
+            f"background: transparent; border: none;"
         )
-        info.setFont(body_font(10))
-        info.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; padding: 4px;")
-        layout.addWidget(info)
+        hl.addWidget(title_lbl)
+        sub_lbl = QLabel(f"Role: {user['role'].title()} | Cinema: {user['cinema_name']}")
+        sub_lbl.setStyleSheet(
+            f"color: {TEXT_MUTED}; font-size: 10pt; background: transparent; border: none;"
+        )
+        hl.addWidget(sub_lbl)
+        root.addWidget(header)
+
+        # Divider
+        div = QWidget()
+        div.setFixedHeight(1)
+        div.setStyleSheet(f"background: {BORDER};")
+        root.addWidget(div)
+
+        # Body
+        body = QWidget()
+        body.setObjectName("modalBody")
+        body.setStyleSheet(f"QWidget#modalBody {{ background: {WHITE}; }}")
+        bl = QVBoxLayout(body)
+        bl.setContentsMargins(24, 24, 24, 24)
+        bl.setSpacing(12)
 
         table = QTableWidget()
         table.setAlternatingRowColors(True)
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         table.verticalHeader().setVisible(False)
+        table.verticalHeader().setDefaultSectionSize(40)
+        table.setShowGrid(False)
         table.setColumnCount(6)
         table.setHorizontalHeaderLabels(
             ["Reference", "Customer", "Tickets", "Total", "Status", "Date"]
         )
         table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        table.setStyleSheet(
+            f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2px solid {BORDER}; }}"
+        )
+        table.setItemDelegate(_LeftPaddingDelegate(12, table))
 
         table.setRowCount(len(activity))
         for row, a in enumerate(activity):
@@ -274,13 +401,32 @@ class ActivityDialog(QDialog):
                 bdate = bdate[:19].replace("T", " ")
             table.setItem(row, 5, QTableWidgetItem(bdate))
 
-        layout.addWidget(table, 1)
+        bl.addWidget(table, 1)
 
         count = QLabel(f"{len(activity)} recent action(s)")
-        count.setFont(body_font(9))
-        count.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
-        layout.addWidget(count)
+        count.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 9pt; font-weight: 500;")
+        bl.addWidget(count)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        root.addWidget(body, 1)
+
+        # Footer
+        footer = QWidget()
+        footer.setObjectName("modalFooter")
+        footer.setStyleSheet(
+            f"QWidget#modalFooter {{ background: {WHITE}; border-top: 1.5px solid {BORDER}; }}"
+        )
+        fl = QHBoxLayout(footer)
+        fl.setContentsMargins(24, 14, 24, 14)
+        fl.addStretch()
+
+        close_btn = secondary_button("Close")
+        close_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 100px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
+        close_btn.clicked.connect(self.reject)
+        fl.addWidget(close_btn)
+
+        root.addWidget(footer)

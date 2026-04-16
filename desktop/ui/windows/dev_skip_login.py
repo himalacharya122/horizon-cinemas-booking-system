@@ -1,3 +1,13 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
+# ======================================================================================
+# Use this in the login window to add skip buttons for development/testing purposes.
+# ======================================================================================
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
@@ -23,7 +33,7 @@ def add_dev_skip_button(layout, on_login_success):
             "QPushButton { background-color: transparent; color: #ff5555; "
             "border: 1px dashed #ff5555; border-radius: 6px; padding: 10px 5px; "
             "font-weight: bold; font-size: 10pt; }"
-            "QPushButton:hover { background-color: rgba(255, 85, 85, 0.1); }"
+            "QPushButton:hover { background-color: rgba(255, 85, 85, 25); }"
             "QPushButton:disabled { color: #888; border-color: #888; }"
         )
 

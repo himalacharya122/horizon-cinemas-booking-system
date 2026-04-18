@@ -133,7 +133,7 @@ def add_screen_to_cinema(db: Session, cinema_id: int, data: dict) -> Screen:
 
 def _create_screen_with_seats(db: Session, cinema_id: int, data: dict) -> Screen:
     """Create a screen and auto-generate its seat records."""
-    tl = data["total_seats"]
+    total = data["total_seats"]
     lower = data["lower_hall_seats"]
     upper = data["upper_gallery_seats"]
     vip = data.get("vip_seats", 0)

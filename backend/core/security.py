@@ -6,10 +6,10 @@ Password hashing (bcrypt) and JWT token creation / verification.
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from jose import JWTError, jwt # type: ignore
-from passlib.context import CryptContext # type: ignore
+from jose import JWTError, jwt  # type: ignore
+from passlib.context import CryptContext  # type: ignore
 
-from config.settings import JWT_SECRET_KEY, JWT_ALGORITHM, JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+from config.settings import JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, JWT_SECRET_KEY
 
 # Password hashing
 
@@ -27,6 +27,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # JWT tokens
+
 
 def create_access_token(
     user_id: int,

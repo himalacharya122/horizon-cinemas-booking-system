@@ -2,3 +2,23 @@ venv
 .env
 __pycache__
 docs
+
+# Ignore all .pyc files
+*.pyc
+# Ignore all .pyo files
+*.pyo
+# Ignore all .pyd files (Windows)
+*.pyd
+
+# Ignore all .log files
+*.log
+
+# Ignore all .db files
+*.db
+
+# Ignore all .sqlite files
+*.sqlite
+
+pytest_cache/
+
+.ruff_cache/

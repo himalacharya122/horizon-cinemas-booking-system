@@ -1,0 +1,26 @@
+[tool.ruff]
+# Target Python 3.12
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), and Isort (I)
+select = ["F", "E", "W", "I"]
+# Relax some rules if needed, but these are good defaults
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "desktop"]
+
+[tool.pytest.ini_options]
+# Mirroring existing pytest.ini in project root
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short --strict-markers"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "unit: Unit tests (no DB or API)",
+    "integration: Integration tests (API + DB)"
+]

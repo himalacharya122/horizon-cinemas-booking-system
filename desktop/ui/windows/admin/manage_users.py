@@ -3,28 +3,41 @@ desktop/ui/windows/admin/manage_users.py
 Admin view: staff user management — view, reset passwords, activity logs.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QComboBox, QLabel, QDialog, QFormLayout,
+    QComboBox,
+    QDialog,
     QDialogButtonBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, DANGER, WHITE,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
+    TEXT_MUTED,
+    TEXT_SECONDARY,
+    body_font,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button, danger_button,
-    separator, show_toast, error_dialog, confirm_dialog, Card,
+    confirm_dialog,
+    danger_button,
+    error_dialog,
+    heading_label,
     muted_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
 )
-from desktop.api_client import api
 
 
 class ManageUsersView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._users = []
@@ -72,10 +85,9 @@ class ManageUsersView(QWidget):
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "ID", "Username", "Full Name", "Email", "Role",
-            "Cinema", "Status", "Last Login"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["ID", "Username", "Full Name", "Email", "Role", "Cinema", "Status", "Last Login"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -245,9 +257,9 @@ class ActivityDialog(QDialog):
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         table.verticalHeader().setVisible(False)
         table.setColumnCount(6)
-        table.setHorizontalHeaderLabels([
-            "Reference", "Customer", "Tickets", "Total", "Status", "Date"
-        ])
+        table.setHorizontalHeaderLabels(
+            ["Reference", "Customer", "Tickets", "Total", "Status", "Date"]
+        )
         table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
 
         table.setRowCount(len(activity))
@@ -257,7 +269,7 @@ class ActivityDialog(QDialog):
             table.setItem(row, 2, QTableWidgetItem(str(a["num_tickets"])))
             table.setItem(row, 3, QTableWidgetItem(f"\u00a3{a['total_cost']:.2f}"))
             table.setItem(row, 4, QTableWidgetItem(a["booking_status"].capitalize()))
-            bdate = (a.get("booking_date") or "\u2014")
+            bdate = a.get("booking_date") or "\u2014"
             if bdate != "\u2014":
                 bdate = bdate[:19].replace("T", " ")
             table.setItem(row, 5, QTableWidgetItem(bdate))

@@ -10,9 +10,10 @@ import os
 import sys
 from datetime import date, time, timedelta
 
-import pytest # type: ignore
-from sqlalchemy import create_engine, event # type: ignore
-from sqlalchemy.orm import sessionmaker # type: ignore
+import pytest  # type: ignore
+from sqlalchemy import CheckConstraint, create_engine, event, text  # type: ignore
+from sqlalchemy.orm import sessionmaker  # type: ignore
+from sqlalchemy.schema import DefaultClause  # type: ignore
 
 # Ensure project root is on path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -23,19 +24,16 @@ os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["JWT_ACCESS_TOKEN_EXPIRE_MINUTES"] = "60"
 
 from backend.core.database import Base, get_db
-from backend.core.security import hash_password, create_access_token
-from backend.models.cinema import City, Cinema, Screen, Seat
-from backend.models.user import Role, User
+from backend.core.security import create_access_token, hash_password
+from backend.models.booking import BasePrice
+from backend.models.cinema import Cinema, City, Screen, Seat
 from backend.models.film import Film, Listing, Showing
-from backend.models.booking import BasePrice, Booking, BookedSeat
-
+from backend.models.user import Role, User
 
 # SQLite engine with FK enforcement
 TEST_DATABASE_URL = "sqlite:///./test_hcbs.db"
 
-test_engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 
 
 @event.listens_for(test_engine, "connect")
@@ -52,14 +50,38 @@ TestSession = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 @pytest.fixture(scope="session", autouse=True)
 def create_tables():
     """Create all tables once per test session."""
+    # SQLite cannot compile some MySQL-specific DDL fragments used by runtime models.
+    # Normalize those only for the test metadata before table creation.
+    users_table = Base.metadata.tables.get("users")
+    if users_table is not None:
+        updated_at = users_table.c.get("updated_at")
+        if (
+            updated_at is not None
+            and updated_at.server_default is not None
+            and "ON UPDATE" in str(updated_at.server_default.arg).upper()
+        ):
+            updated_at.server_default = DefaultClause(text("CURRENT_TIMESTAMP"))
+
+    bookings_table = Base.metadata.tables.get("bookings")
+    if bookings_table is not None:
+        mysql_only_checks = {"chk_advance_booking", "chk_show_date_valid"}
+        for constraint in list(bookings_table.constraints):
+            if isinstance(constraint, CheckConstraint) and constraint.name in mysql_only_checks:
+                bookings_table.constraints.remove(constraint)
+
     Base.metadata.create_all(bind=test_engine)
     yield
     Base.metadata.drop_all(bind=test_engine)
     # Clean up SQLite file
+    test_engine.dispose()
     import pathlib
+
     db_file = pathlib.Path("test_hcbs.db")
     if db_file.exists():
-        db_file.unlink()
+        try:
+            db_file.unlink()
+        except PermissionError:
+            pass
 
 
 @pytest.fixture()
@@ -72,7 +94,8 @@ def db():
     yield session
 
     session.close()
-    transaction.rollback()
+    if transaction.is_active:
+        transaction.rollback()
     connection.close()
 
 
@@ -103,28 +126,40 @@ def seeded_db(db):
 
     # Cinemas
     cinema_bristol = Cinema(
-        city_id=bristol.city_id, cinema_name="Horizon Bristol Cabot Circus",
-        address="1 Glass Road, Bristol", phone="0117 000 0001",
-        total_screens=1, is_active=True,
+        city_id=bristol.city_id,
+        cinema_name="Horizon Bristol Cabot Circus",
+        address="1 Glass Road, Bristol",
+        phone="0117 000 0001",
+        total_screens=1,
+        is_active=True,
     )
     cinema_london = Cinema(
-        city_id=london.city_id, cinema_name="Horizon London Leicester Sq",
-        address="1 Leicester Square, London", phone="020 0000 0001",
-        total_screens=1, is_active=True,
+        city_id=london.city_id,
+        cinema_name="Horizon London Leicester Sq",
+        address="1 Leicester Square, London",
+        phone="020 0000 0001",
+        total_screens=1,
+        is_active=True,
     )
     db.add_all([cinema_bristol, cinema_london])
     db.flush()
 
     # Screens
     screen_bristol = Screen(
-        cinema_id=cinema_bristol.cinema_id, screen_number=1,
-        total_seats=80, lower_hall_seats=24,
-        upper_gallery_seats=56, vip_seats=5,
+        cinema_id=cinema_bristol.cinema_id,
+        screen_number=1,
+        total_seats=80,
+        lower_hall_seats=24,
+        upper_gallery_seats=56,
+        vip_seats=5,
     )
     screen_london = Screen(
-        cinema_id=cinema_london.cinema_id, screen_number=1,
-        total_seats=100, lower_hall_seats=30,
-        upper_gallery_seats=70, vip_seats=10,
+        cinema_id=cinema_london.cinema_id,
+        screen_number=1,
+        total_seats=100,
+        lower_hall_seats=30,
+        upper_gallery_seats=70,
+        vip_seats=10,
     )
     db.add_all([screen_bristol, screen_london])
     db.flush()
@@ -143,19 +178,31 @@ def seeded_db(db):
     # Users
     pw = hash_password("Password123!")
     user_staff = User(
-        cinema_id=cinema_bristol.cinema_id, role_id=role_staff.role_id,
-        username="teststaff", first_name="Test", last_name="Staff",
-        email="staff@test.com", password_hash=pw,
+        cinema_id=cinema_bristol.cinema_id,
+        role_id=role_staff.role_id,
+        username="teststaff",
+        first_name="Test",
+        last_name="Staff",
+        email="staff@test.com",
+        password_hash=pw,
     )
     user_admin = User(
-        cinema_id=cinema_bristol.cinema_id, role_id=role_admin.role_id,
-        username="testadmin", first_name="Test", last_name="Admin",
-        email="admin@test.com", password_hash=pw,
+        cinema_id=cinema_bristol.cinema_id,
+        role_id=role_admin.role_id,
+        username="testadmin",
+        first_name="Test",
+        last_name="Admin",
+        email="admin@test.com",
+        password_hash=pw,
     )
     user_manager = User(
-        cinema_id=cinema_london.cinema_id, role_id=role_manager.role_id,
-        username="testmanager", first_name="Test", last_name="Manager",
-        email="manager@test.com", password_hash=pw,
+        cinema_id=cinema_london.cinema_id,
+        role_id=role_manager.role_id,
+        username="testmanager",
+        first_name="Test",
+        last_name="Manager",
+        email="manager@test.com",
+        password_hash=pw,
     )
     db.add_all([user_staff, user_admin, user_manager])
     db.flush()
@@ -171,18 +218,25 @@ def seeded_db(db):
 
     # Film
     film = Film(
-        title="Top Gun: Maverick", description="Test film",
-        genre="Action", age_rating="PG-13", duration_mins=130,
-        release_date=date(2022, 5, 27), imdb_rating=8.5,
-        cast_list="Tom Cruise", director="Joseph Kosinski",
+        title="Top Gun: Maverick",
+        description="Test film",
+        genre="Action",
+        age_rating="PG-13",
+        duration_mins=130,
+        release_date=date(2022, 5, 27),
+        imdb_rating=8.5,
+        cast_list="Tom Cruise",
+        director="Joseph Kosinski",
     )
     db.add(film)
     db.flush()
 
     # Listing (today → 14 days)
     listing = Listing(
-        film_id=film.film_id, screen_id=screen_bristol.screen_id,
-        start_date=date.today(), end_date=date.today() + timedelta(days=14),
+        film_id=film.film_id,
+        screen_id=screen_bristol.screen_id,
+        start_date=date.today(),
+        end_date=date.today() + timedelta(days=14),
         created_by=user_admin.user_id,
     )
     db.add(listing)
@@ -190,13 +244,19 @@ def seeded_db(db):
 
     # Showings
     showing_morning = Showing(
-        listing_id=listing.listing_id, show_time=time(10, 0), show_type="morning",
+        listing_id=listing.listing_id,
+        show_time=time(10, 0),
+        show_type="morning",
     )
     showing_afternoon = Showing(
-        listing_id=listing.listing_id, show_time=time(14, 0), show_type="afternoon",
+        listing_id=listing.listing_id,
+        show_time=time(14, 0),
+        show_type="afternoon",
     )
     showing_evening = Showing(
-        listing_id=listing.listing_id, show_time=time(18, 0), show_type="evening",
+        listing_id=listing.listing_id,
+        show_time=time(18, 0),
+        show_type="evening",
     )
     db.add_all([showing_morning, showing_afternoon, showing_evening])
     db.flush()
@@ -224,6 +284,7 @@ def seeded_db(db):
 def client(db):
     """FastAPI TestClient with DB dependency overridden to use the test session."""
     from fastapi.testclient import TestClient
+
     from backend.main import app
 
     def _override_get_db():
@@ -268,18 +329,30 @@ def auth_header(token: str) -> dict:
 def _generate_seats(db, screen: Screen):
     """Mirror the seed data stored procedure — generate seats for a screen."""
     for i in range(1, screen.lower_hall_seats + 1):
-        db.add(Seat(
-            screen_id=screen.screen_id, seat_number=f"L{i}",
-            seat_type="lower_hall", row_label=f"L{(i-1)//10+1}",
-        ))
+        db.add(
+            Seat(
+                screen_id=screen.screen_id,
+                seat_number=f"L{i}",
+                seat_type="lower_hall",
+                row_label=f"L{(i - 1) // 10 + 1}",
+            )
+        )
     non_vip = screen.upper_gallery_seats - screen.vip_seats
     for i in range(1, non_vip + 1):
-        db.add(Seat(
-            screen_id=screen.screen_id, seat_number=f"U{i}",
-            seat_type="upper_gallery", row_label=f"U{(i-1)//10+1}",
-        ))
+        db.add(
+            Seat(
+                screen_id=screen.screen_id,
+                seat_number=f"U{i}",
+                seat_type="upper_gallery",
+                row_label=f"U{(i - 1) // 10 + 1}",
+            )
+        )
     for i in range(1, screen.vip_seats + 1):
-        db.add(Seat(
-            screen_id=screen.screen_id, seat_number=f"VIP-{i}",
-            seat_type="vip", row_label="V",
-        ))
+        db.add(
+            Seat(
+                screen_id=screen.screen_id,
+                seat_number=f"VIP-{i}",
+                seat_type="vip",
+                row_label="V",
+            )
+        )

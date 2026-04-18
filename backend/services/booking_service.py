@@ -14,16 +14,13 @@ Business rules enforced here:
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from sqlalchemy import func, and_ # type: ignore
-from sqlalchemy.orm import Session, joinedload # type: ignore
+from sqlalchemy import func  # type: ignore
+from sqlalchemy.orm import Session, joinedload  # type: ignore
 
-from backend.models.booking import BasePrice, Booking, BookedSeat
-from backend.models.film import Showing, Listing
-from backend.models.cinema import Screen, Cinema, Seat
-from backend.models.user import User
-from backend.core.exceptions import (
-    NotFoundError, BookingError, ValidationError
-)
+from backend.core.exceptions import BookingError, NotFoundError, ValidationError
+from backend.models.booking import BasePrice, BookedSeat, Booking
+from backend.models.cinema import Cinema, Screen, Seat
+from backend.models.film import Listing, Showing
 
 
 # Reference generator
@@ -68,7 +65,9 @@ def get_price_for_showing(db: Session, showing: Showing, seat_type: str) -> floa
     )
 
     if not bp:
-        raise BookingError(f"No base price configured for city_id={city_id}, period={showing.show_type}")
+        raise BookingError(
+            f"No base price configured for city_id={city_id}, period={showing.show_type}"
+        )
 
     return bp.price_for_seat_type(seat_type)
 
@@ -192,8 +191,7 @@ def _find_available_seats(
 
     if len(available) < num_tickets:
         raise BookingError(
-            f"Only {len(available)} {seat_type} seat(s) available, "
-            f"but {num_tickets} requested"
+            f"Only {len(available)} {seat_type} seat(s) available, but {num_tickets} requested"
         )
 
     return available[:num_tickets]
@@ -238,11 +236,7 @@ def create_booking(db: Session, data: dict, booked_by: int) -> Booking:
     # Load showing
     showing = (
         db.query(Showing)
-        .options(
-            joinedload(Showing.listing)
-            .joinedload(Listing.screen)
-            .joinedload(Screen.cinema)
-        )
+        .options(joinedload(Showing.listing).joinedload(Listing.screen).joinedload(Screen.cinema))
         .filter(Showing.showing_id == showing_id, Showing.is_active == True)  # noqa: E712
         .first()
     )
@@ -353,9 +347,7 @@ def get_booking_by_reference(db: Session, reference: str) -> Booking:
         db.query(Booking)
         .options(
             joinedload(Booking.booked_seats).joinedload(BookedSeat.seat),
-            joinedload(Booking.showing)
-            .joinedload(Showing.listing)
-            .joinedload(Listing.film),
+            joinedload(Booking.showing).joinedload(Showing.listing).joinedload(Listing.film),
             joinedload(Booking.showing)
             .joinedload(Showing.listing)
             .joinedload(Listing.screen)
@@ -369,9 +361,7 @@ def get_booking_by_reference(db: Session, reference: str) -> Booking:
     return booking
 
 
-def get_bookings_for_showing(
-    db: Session, showing_id: int, show_date: date
-) -> list[Booking]:
+def get_bookings_for_showing(db: Session, showing_id: int, show_date: date) -> list[Booking]:
     """All confirmed bookings for a particular showing on a date."""
     return (
         db.query(Booking)

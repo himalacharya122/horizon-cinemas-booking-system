@@ -3,29 +3,53 @@ desktop/ui/windows/admin/manage_films.py
 Admin view: film catalogue CRUD — add, edit, soft-delete films.
 """
 
-from PyQt6.QtCore import Qt, QDate # type: ignore
-from PyQt6.QtWidgets import ( # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QDialog, QLineEdit, QComboBox, QSpinBox, QDateEdit,
-    QDoubleSpinBox, QTextEdit, QFormLayout, QDialogButtonBox,
+from PyQt6.QtWidgets import (  # type: ignore
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLineEdit,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, CHARCOAL, SMOKE, SPACING_MD, SPACING_LG,
-    heading_font, body_font,
+    SPACING_LG,
+    SPACING_MD,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button, danger_button,
-    separator, show_toast, error_dialog, confirm_dialog,
+    confirm_dialog,
+    danger_button,
+    error_dialog,
+    heading_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
 )
-from desktop.api_client import api
 
-GENRES = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance",
-          "Thriller", "Animation", "Documentary"]
+GENRES = [
+    "Action",
+    "Comedy",
+    "Drama",
+    "Horror",
+    "Sci-Fi",
+    "Romance",
+    "Thriller",
+    "Animation",
+    "Documentary",
+]
 
 
 class ManageFilmsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -59,9 +83,9 @@ class ManageFilmsView(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "ID", "Title", "Genre", "Rating", "Duration", "Release", "IMDb", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["ID", "Title", "Genre", "Rating", "Duration", "Release", "IMDb", "Status"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
 

@@ -28,21 +28,24 @@ Test cases:
 import re
 from datetime import date, timedelta
 
-from tests.conftest import auth_header # type: ignore
+from tests.conftest import auth_header  # type: ignore
 
 
 class TestCheckAvailability:
-
     def test_availability_returns_correct_data(self, seeded_client, staff_token):
         """TC-BK-01: Availability check returns seats + correct evening lower hall price."""
         client, seed = seeded_client
         showing = seed["showings"]["evening"]
-        resp = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=1)).isoformat(),
-            "seat_type": "lower_hall",
-            "num_tickets": 2,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=1)).isoformat(),
+                "seat_type": "lower_hall",
+                "num_tickets": 2,
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["available"] is True
@@ -53,12 +56,16 @@ class TestCheckAvailability:
     def test_availability_nonexistent_showing(self, seeded_client, staff_token):
         """TC-BK-19"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": 99999,
-            "show_date": date.today().isoformat(),
-            "seat_type": "lower_hall",
-            "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": 99999,
+                "show_date": date.today().isoformat(),
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 404
 
     def test_availability_outside_listing_window(self, seeded_client, staff_token):
@@ -66,30 +73,37 @@ class TestCheckAvailability:
         client, seed = seeded_client
         showing = seed["showings"]["morning"]
         far_future = (date.today() + timedelta(days=30)).isoformat()
-        resp = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id,
-            "show_date": far_future,
-            "seat_type": "lower_hall",
-            "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": far_future,
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         # Could be 400 (booking error) or 400 (advance limit) depending on which fires first
         assert resp.status_code == 400
 
 
 class TestCreateBooking:
-
     def _book(self, client, token, seed, seat_type="lower_hall", num=2, days_ahead=1):
         showing = seed["showings"]["evening"]
-        return client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=days_ahead)).isoformat(),
-            "customer_name": "Alice Test",
-            "customer_phone": "07700900000",
-            "customer_email": "alice@test.com",
-            "seat_type": seat_type,
-            "num_tickets": num,
-            "payment_simulated": True,
-        }, headers=auth_header(token))
+        return client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=days_ahead)).isoformat(),
+                "customer_name": "Alice Test",
+                "customer_phone": "07700900000",
+                "customer_email": "alice@test.com",
+                "seat_type": seat_type,
+                "num_tickets": num,
+                "payment_simulated": True,
+            },
+            headers=auth_header(token),
+        )
 
     def test_create_booking_confirmed(self, seeded_client, staff_token):
         """TC-BK-02: Booking is created with confirmed status."""
@@ -141,11 +155,17 @@ class TestCreateBooking:
         """TC-BK-09"""
         client, seed = seeded_client
         showing = seed["showings"]["evening"]
-        resp = client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() - timedelta(days=1)).isoformat(),
-            "customer_name": "X", "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() - timedelta(days=1)).isoformat(),
+                "customer_name": "X",
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 400
         assert "past" in resp.json()["detail"].lower()
 
@@ -168,23 +188,33 @@ class TestCreateBooking:
         """TC-BK-12: Requests without a token get 403."""
         client, seed = seeded_client
         showing = seed["showings"]["evening"]
-        resp = client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": date.today().isoformat(),
-            "customer_name": "X", "seat_type": "lower_hall", "num_tickets": 1,
-        })
+        resp = client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": date.today().isoformat(),
+                "customer_name": "X",
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+        )
         assert resp.status_code == 403
 
     def test_missing_customer_name(self, seeded_client, staff_token):
         """TC-BK-13"""
         client, seed = seeded_client
         showing = seed["showings"]["evening"]
-        resp = client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=1)).isoformat(),
-            "seat_type": "lower_hall", "num_tickets": 1,
-            # customer_name is missing
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=1)).isoformat(),
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+                # customer_name is missing
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 422
 
     def test_availability_decreases_after_booking(self, seeded_client, staff_token):
@@ -194,37 +224,53 @@ class TestCreateBooking:
         show_date = (date.today() + timedelta(days=1)).isoformat()
 
         # Check before
-        r1 = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id, "show_date": show_date,
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        r1 = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": show_date,
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         before = r1.json()["seats_available"]
 
         # Book 3
         self._book(client, staff_token, seed, num=3)
 
         # Check after
-        r2 = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id, "show_date": show_date,
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        r2 = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": show_date,
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         after = r2.json()["seats_available"]
 
         assert after == before - 3
 
 
 class TestLookupBooking:
-
     def test_lookup_by_reference(self, seeded_client, staff_token):
         """TC-BK-05"""
         client, seed = seeded_client
         showing = seed["showings"]["morning"]
-        create_resp = client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=1)).isoformat(),
-            "customer_name": "Bob Lookup",
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        create_resp = client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=1)).isoformat(),
+                "customer_name": "Bob Lookup",
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         ref = create_resp.json()["booking_reference"]
 
         lookup = client.get(
@@ -246,15 +292,19 @@ class TestLookupBooking:
 
 
 class TestCancelBooking:
-
     def _make_booking(self, client, token, seed, days_ahead=2):
         showing = seed["showings"]["afternoon"]
-        resp = client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=days_ahead)).isoformat(),
-            "customer_name": "Cancel Test",
-            "seat_type": "lower_hall", "num_tickets": 2,
-        }, headers=auth_header(token))
+        resp = client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=days_ahead)).isoformat(),
+                "customer_name": "Cancel Test",
+                "seat_type": "lower_hall",
+                "num_tickets": 2,
+            },
+            headers=auth_header(token),
+        )
         return resp.json()
 
     def test_cancel_50_percent_fee(self, seeded_client, staff_token):
@@ -263,9 +313,13 @@ class TestCancelBooking:
         booking = self._make_booking(client, staff_token, seed)
         total = booking["total_cost"]
 
-        resp = client.post("/api/v1/bookings/cancel", json={
-            "booking_reference": booking["booking_reference"],
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/cancel",
+            json={
+                "booking_reference": booking["booking_reference"],
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["cancellation_fee"] == round(total * 0.50, 2)
@@ -276,9 +330,13 @@ class TestCancelBooking:
         booking = self._make_booking(client, staff_token, seed)
         total = booking["total_cost"]
 
-        resp = client.post("/api/v1/bookings/cancel", json={
-            "booking_reference": booking["booking_reference"],
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/cancel",
+            json={
+                "booking_reference": booking["booking_reference"],
+            },
+            headers=auth_header(staff_token),
+        )
         data = resp.json()
         expected_refund = round(total - total * 0.50, 2)
         assert data["refund_amount"] == expected_refund
@@ -290,14 +348,22 @@ class TestCancelBooking:
         ref = booking["booking_reference"]
 
         # First cancel — OK
-        client.post("/api/v1/bookings/cancel", json={
-            "booking_reference": ref,
-        }, headers=auth_header(staff_token))
+        client.post(
+            "/api/v1/bookings/cancel",
+            json={
+                "booking_reference": ref,
+            },
+            headers=auth_header(staff_token),
+        )
 
         # Second cancel — should fail
-        resp = client.post("/api/v1/bookings/cancel", json={
-            "booking_reference": ref,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/bookings/cancel",
+            json={
+                "booking_reference": ref,
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 400
         assert "already" in resp.json()["detail"].lower()
 
@@ -308,25 +374,41 @@ class TestCancelBooking:
         show_date = (date.today() + timedelta(days=2)).isoformat()
 
         # Check initial
-        r1 = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id, "show_date": show_date,
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        r1 = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": show_date,
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         before = r1.json()["seats_available"]
 
         # Book 2
         booking = self._make_booking(client, staff_token, seed)
 
         # Cancel
-        client.post("/api/v1/bookings/cancel", json={
-            "booking_reference": booking["booking_reference"],
-        }, headers=auth_header(staff_token))
+        client.post(
+            "/api/v1/bookings/cancel",
+            json={
+                "booking_reference": booking["booking_reference"],
+            },
+            headers=auth_header(staff_token),
+        )
 
         # Check again — should be back to original
-        r2 = client.post("/api/v1/bookings/check-availability", json={
-            "showing_id": showing.showing_id, "show_date": show_date,
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        r2 = client.post(
+            "/api/v1/bookings/check-availability",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": show_date,
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
         after = r2.json()["seats_available"]
 
         assert after == before

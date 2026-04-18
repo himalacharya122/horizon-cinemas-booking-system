@@ -3,27 +3,35 @@ desktop/ui/windows/booking_staff/browse_films.py
 Browse All Films — view the full film catalogue regardless of listings.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QLineEdit, QComboBox, QLabel,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, GOLD, WHITE,
-    BG_CARD, BG_HOVER, BORDER,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    TEXT_SECONDARY,
 )
 from desktop.ui.widgets import (
-    heading_label, separator, show_toast, error_dialog,
-    secondary_button, muted_label,
+    error_dialog,
+    heading_label,
+    muted_label,
+    secondary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class BrowseAllFilmsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._all_films = []
@@ -59,10 +67,19 @@ class BrowseAllFilmsView(QWidget):
         filter_row.addWidget(lbl1)
         self.genre_filter = QComboBox()
         self.genre_filter.addItem("All Genres")
-        self.genre_filter.addItems([
-            "Action", "Comedy", "Drama", "Horror", "Sci-Fi",
-            "Romance", "Thriller", "Animation", "Documentary",
-        ])
+        self.genre_filter.addItems(
+            [
+                "Action",
+                "Comedy",
+                "Drama",
+                "Horror",
+                "Sci-Fi",
+                "Romance",
+                "Thriller",
+                "Animation",
+                "Documentary",
+            ]
+        )
         self.genre_filter.setFixedWidth(150)
         self.genre_filter.currentIndexChanged.connect(self._apply_filters)
         filter_row.addWidget(self.genre_filter)
@@ -88,9 +105,9 @@ class BrowseAllFilmsView(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "Title", "Genre", "Age Rating", "Duration", "Director", "IMDb", "Cast", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["Title", "Genre", "Age Rating", "Duration", "Director", "IMDb", "Cast", "Status"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -111,7 +128,8 @@ class BrowseAllFilmsView(QWidget):
         search = self.search_input.text().strip().lower()
         if search:
             filtered = [
-                f for f in filtered
+                f
+                for f in filtered
                 if search in f.get("title", "").lower()
                 or search in (f.get("director", "") or "").lower()
                 or search in (f.get("cast_list", "") or "").lower()
@@ -138,6 +156,8 @@ class BrowseAllFilmsView(QWidget):
             imdb = f.get("imdb_rating")
             self.table.setItem(row, 5, QTableWidgetItem(f"\u2605 {imdb}" if imdb else "\u2014"))
             self.table.setItem(row, 6, QTableWidgetItem(f.get("cast_list", "") or "\u2014"))
-            self.table.setItem(row, 7, QTableWidgetItem("Active" if f.get("is_active") else "Inactive"))
+            self.table.setItem(
+                row, 7, QTableWidgetItem("Active" if f.get("is_active") else "Inactive")
+            )
 
         self.count_label.setText(f"Showing {len(films)} of {len(self._all_films)} films")

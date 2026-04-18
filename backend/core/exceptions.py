@@ -37,9 +37,11 @@ class NotFoundError(HCBSException):
 
 class BookingError(HCBSException):
     """Covers seat unavailability, advance-booking limits, cancellation rules, etc."""
+
     pass
 
 
 class ValidationError(HCBSException):
     """Input data fails business validation."""
+
     pass

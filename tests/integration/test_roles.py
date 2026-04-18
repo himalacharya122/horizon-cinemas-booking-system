@@ -15,11 +15,10 @@ Test cases:
   TC-ROLE-10  No token returns 403 on protected endpoints
 """
 
-from tests.conftest import auth_header # type: ignore
+from tests.conftest import auth_header  # type: ignore
 
 
 class TestRoleAccess:
-
     def test_staff_can_list_films(self, seeded_client, staff_token):
         """TC-ROLE-01"""
         client, _ = seeded_client
@@ -30,64 +29,99 @@ class TestRoleAccess:
     def test_staff_cannot_create_film(self, seeded_client, staff_token):
         """TC-ROLE-02"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/films", json={
-            "title": "Blocked Film", "genre": "Action",
-            "age_rating": "PG", "duration_mins": 90,
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Blocked Film",
+                "genre": "Action",
+                "age_rating": "PG",
+                "duration_mins": 90,
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 403
 
     def test_staff_cannot_create_cinema(self, seeded_client, staff_token):
         """TC-ROLE-03"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/cinemas", json={
-            "city_id": 1, "cinema_name": "X", "address": "X",
-        }, headers=auth_header(staff_token))
+        resp = client.post(
+            "/api/v1/cinemas",
+            json={
+                "city_id": 1,
+                "cinema_name": "X",
+                "address": "X",
+            },
+            headers=auth_header(staff_token),
+        )
         assert resp.status_code == 403
 
     def test_admin_can_create_film(self, seeded_client, admin_token):
         """TC-ROLE-04"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/films", json={
-            "title": "Admin Film", "genre": "Drama",
-            "age_rating": "15", "duration_mins": 120,
-        }, headers=auth_header(admin_token))
+        resp = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Admin Film",
+                "genre": "Drama",
+                "age_rating": "15",
+                "duration_mins": 120,
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 201
         assert resp.json()["title"] == "Admin Film"
 
     def test_admin_cannot_create_cinema(self, seeded_client, admin_token):
         """TC-ROLE-05"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/cinemas", json={
-            "city_id": 1, "cinema_name": "X", "address": "X",
-        }, headers=auth_header(admin_token))
+        resp = client.post(
+            "/api/v1/cinemas",
+            json={
+                "city_id": 1,
+                "cinema_name": "X",
+                "address": "X",
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 403
 
     def test_manager_can_create_cinema(self, seeded_client, manager_token):
         """TC-ROLE-06"""
         client, seed = seeded_client
         city_id = seed["cities"]["london"].city_id
-        resp = client.post("/api/v1/cinemas", json={
-            "city_id": city_id,
-            "cinema_name": "Horizon London Stratford",
-            "address": "Westfield Stratford",
-        }, headers=auth_header(manager_token))
+        resp = client.post(
+            "/api/v1/cinemas",
+            json={
+                "city_id": city_id,
+                "cinema_name": "Horizon London Stratford",
+                "address": "Westfield Stratford",
+            },
+            headers=auth_header(manager_token),
+        )
         assert resp.status_code == 201
         assert "Stratford" in resp.json()["cinema_name"]
 
     def test_manager_can_create_film(self, seeded_client, manager_token):
         """TC-ROLE-07"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/films", json={
-            "title": "Manager Film", "genre": "Comedy",
-            "age_rating": "PG-13", "duration_mins": 95,
-        }, headers=auth_header(manager_token))
+        resp = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Manager Film",
+                "genre": "Comedy",
+                "age_rating": "PG-13",
+                "duration_mins": 95,
+            },
+            headers=auth_header(manager_token),
+        )
         assert resp.status_code == 201
 
     def test_admin_can_access_reports(self, seeded_client, admin_token):
         """TC-ROLE-08"""
         client, _ = seeded_client
         resp = client.get(
-            "/api/v1/reports/revenue", params={"year": 2025, "month": 1},
+            "/api/v1/reports/revenue",
+            params={"year": 2025, "month": 1},
             headers=auth_header(admin_token),
         )
         assert resp.status_code == 200
@@ -96,7 +130,8 @@ class TestRoleAccess:
         """TC-ROLE-09"""
         client, _ = seeded_client
         resp = client.get(
-            "/api/v1/reports/revenue", params={"year": 2025, "month": 1},
+            "/api/v1/reports/revenue",
+            params={"year": 2025, "month": 1},
             headers=auth_header(staff_token),
         )
         assert resp.status_code == 403

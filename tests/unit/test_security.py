@@ -16,13 +16,14 @@ Test cases:
 from datetime import timedelta
 
 from backend.core.security import (
-    hash_password, verify_password,
-    create_access_token, decode_access_token,
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    verify_password,
 )
 
 
 class TestPasswordHashing:
-
     def test_hash_produces_bcrypt_string(self):
         """TC-SEC-01: hash output starts with $2b$ (bcrypt prefix)."""
         hashed = hash_password("MySecret123")
@@ -49,12 +50,9 @@ class TestPasswordHashing:
 
 
 class TestJWT:
-
     def test_token_contains_expected_claims(self):
         """TC-SEC-04: JWT payload includes sub, username, role, cinema_id, exp."""
-        token = create_access_token(
-            user_id=42, username="testuser", role_name="admin", cinema_id=1
-        )
+        token = create_access_token(user_id=42, username="testuser", role_name="admin", cinema_id=1)
         payload = decode_access_token(token)
         assert payload is not None
         assert payload["sub"] == "42"
@@ -73,7 +71,10 @@ class TestJWT:
     def test_expired_token_returns_none(self):
         """TC-SEC-06: An already-expired token returns None."""
         token = create_access_token(
-            1, "u", "booking_staff", 1,
+            1,
+            "u",
+            "booking_staff",
+            1,
             expires_delta=timedelta(seconds=-10),
         )
         assert decode_access_token(token) is None

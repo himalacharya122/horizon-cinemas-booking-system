@@ -3,27 +3,35 @@ desktop/ui/windows/admin/all_bookings.py
 Admin view: view all bookings across all cinemas with cinema switcher.
 """
 
-from datetime import date
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QComboBox, QLabel, QLineEdit, QDateEdit,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import QDate  # type: ignore
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    TEXT_SECONDARY,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button,
-    separator, show_toast, error_dialog, muted_label,
+    error_dialog,
+    heading_label,
+    muted_label,
+    primary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class AllBookingsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -80,10 +88,20 @@ class AllBookingsView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(10)
-        self.table.setHorizontalHeaderLabels([
-            "Reference", "Film", "Cinema", "Date", "Time",
-            "Customer", "Phone", "Tickets", "Total", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            [
+                "Reference",
+                "Film",
+                "Cinema",
+                "Date",
+                "Time",
+                "Customer",
+                "Phone",
+                "Tickets",
+                "Total",
+                "Status",
+            ]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)

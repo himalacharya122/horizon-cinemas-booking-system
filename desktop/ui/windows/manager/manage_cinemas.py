@@ -4,24 +4,36 @@ Manager view: add new cinemas (in existing or new cities),
 add screens to existing cinemas, set base prices.
 """
 
-from PyQt6.QtCore import Qt # type: ignore
-from PyQt6.QtWidgets import ( # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QDialog, QLineEdit, QComboBox, QSpinBox,
-    QFormLayout, QDialogButtonBox, QLabel, QPushButton, QTabWidget,
+from PyQt6.QtWidgets import (  # type: ignore
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
     QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLineEdit,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
-from desktop.ui.theme import SPACING_MD, SPACING_LG, SMOKE
-from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button,
-    separator, show_toast, error_dialog, Card,
-)
 from desktop.api_client import api
+from desktop.ui.theme import SPACING_LG, SPACING_MD
+from desktop.ui.widgets import (
+    error_dialog,
+    heading_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
+)
 
 
 class ManageCinemasView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -56,9 +68,9 @@ class ManageCinemasView(QWidget):
         self.cinema_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.cinema_table.verticalHeader().setVisible(False)
         self.cinema_table.setColumnCount(6)
-        self.cinema_table.setHorizontalHeaderLabels([
-            "ID", "Cinema", "City", "Address", "Screens", "Status"
-        ])
+        self.cinema_table.setHorizontalHeaderLabels(
+            ["ID", "Cinema", "City", "Address", "Screens", "Status"]
+        )
         self.cinema_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.cinema_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         cl.addWidget(self.cinema_table, 1)
@@ -84,9 +96,9 @@ class ManageCinemasView(QWidget):
         self.price_table.setAlternatingRowColors(True)
         self.price_table.verticalHeader().setVisible(False)
         self.price_table.setColumnCount(5)
-        self.price_table.setHorizontalHeaderLabels([
-            "City", "Period", "Lower Hall", "Upper Gallery", "VIP"
-        ])
+        self.price_table.setHorizontalHeaderLabels(
+            ["City", "Period", "Lower Hall", "Upper Gallery", "VIP"]
+        )
         self.price_table.horizontalHeader().setStretchLastSection(True)
         pl.addWidget(self.price_table, 1)
 
@@ -104,7 +116,9 @@ class ManageCinemasView(QWidget):
                 self.cinema_table.setItem(row, 2, QTableWidgetItem(c.get("city_name", "")))
                 self.cinema_table.setItem(row, 3, QTableWidgetItem(c["address"]))
                 self.cinema_table.setItem(row, 4, QTableWidgetItem(str(len(c.get("screens", [])))))
-                self.cinema_table.setItem(row, 5, QTableWidgetItem("Active" if c["is_active"] else "Inactive"))
+                self.cinema_table.setItem(
+                    row, 5, QTableWidgetItem("Active" if c["is_active"] else "Inactive")
+                )
         except Exception as e:
             error_dialog(self, str(e))
 
@@ -116,7 +130,9 @@ class ManageCinemasView(QWidget):
                 self.price_table.setItem(row, 0, QTableWidgetItem(cities.get(p["city_id"], "?")))
                 self.price_table.setItem(row, 1, QTableWidgetItem(p["show_period"].capitalize()))
                 self.price_table.setItem(row, 2, QTableWidgetItem(f"£{p['lower_hall_price']:.2f}"))
-                self.price_table.setItem(row, 3, QTableWidgetItem(f"£{p['upper_gallery_price']:.2f}"))
+                self.price_table.setItem(
+                    row, 3, QTableWidgetItem(f"£{p['upper_gallery_price']:.2f}")
+                )
                 self.price_table.setItem(row, 4, QTableWidgetItem(f"£{p['vip_price']:.2f}"))
         except Exception as e:
             error_dialog(self, str(e))
@@ -172,7 +188,6 @@ class ManageCinemasView(QWidget):
 
 # Dialogs
 class CinemaDialog(QDialog):
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Add Cinema")
@@ -236,7 +251,6 @@ class CinemaDialog(QDialog):
 
 
 class ScreenDialog(QDialog):
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Add Screen")
@@ -295,7 +309,6 @@ class ScreenDialog(QDialog):
 
 
 class PriceDialog(QDialog):
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Set Base Price")

@@ -3,30 +3,54 @@ desktop/ui/windows/booking_staff/new_booking.py
 Booking form with receipt display and print capability.
 """
 
-from datetime import date
-from PyQt6.QtCore import Qt, QDate  # type: ignore
+from PyQt6.QtCore import QDate, Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QDateEdit,
-    QRadioButton, QSpinBox, QLineEdit, QButtonGroup,
-    QScrollArea, QFrame, QApplication, QPushButton,
+    QApplication,
+    QButtonGroup,
+    QComboBox,
+    QDateEdit,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, ACCENT_HOVER, WHITE, SUCCESS, GOLD,
-    BG_DARKEST, BG_CARD, BG_DARK, BG_INPUT, BG_HOVER, BORDER,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    ACCENT,
+    BG_HOVER,
+    BORDER,
+    SPACING_LG,
+    SPACING_MD,
+    SUCCESS,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    body_font,
+    heading_font,
 )
 from desktop.ui.widgets import (
-    heading_label, subheading_label, muted_label, primary_button,
-    secondary_button, danger_button, Card, separator, form_row,
-    labelled_value, show_toast, error_dialog, status_badge,
+    Card,
+    error_dialog,
+    form_row,
+    heading_label,
+    labelled_value,
+    muted_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
+    status_badge,
+    subheading_label,
 )
-from desktop.api_client import api
 
 
 class NewBookingView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._showings_data = []
@@ -51,7 +75,7 @@ class NewBookingView(QWidget):
         columns = QHBoxLayout()
         columns.setSpacing(SPACING_LG)
 
-        # ─── Left column — booking form ───
+        # Left column — booking form
         left = QVBoxLayout()
         left.setSpacing(SPACING_MD)
 
@@ -158,7 +182,7 @@ class NewBookingView(QWidget):
         left.addWidget(customer_card)
         left.addStretch()
 
-        # ─── Right column — receipt ───
+        # Right column — receipt
         right = QVBoxLayout()
         right.setSpacing(SPACING_MD)
 
@@ -197,7 +221,7 @@ class NewBookingView(QWidget):
         scroll.setWidget(content)
         outer.addWidget(scroll)
 
-    # ─── Data loading ───
+    # Data loading
 
     def _load_cinemas(self):
         try:
@@ -210,7 +234,7 @@ class NewBookingView(QWidget):
 
             for c in cinemas:
                 label = f"{c['cinema_name']}"
-                if c.get('city_name'):
+                if c.get("city_name"):
                     label += f"  \u2014  {c['city_name']}"
                 self.cinema_combo.addItem(label, c["cinema_id"])
 
@@ -256,14 +280,17 @@ class NewBookingView(QWidget):
             t = s["show_time"]
             if isinstance(t, str) and len(t) > 5:
                 t = t[:5]
-            label = f"{t}  ({s['show_type'].capitalize()})  \u2014  from \u00a3{s['lower_hall_price']:.2f}"
+            label = (
+                f"{t}  ({s['show_type'].capitalize()})  \u2014  "
+                f"from \u00a3{s['lower_hall_price']:.2f}"
+            )
             self.showing_combo.addItem(label, s)
 
         self._availability = None
         self.book_btn.setEnabled(False)
         self.avail_label.hide()
 
-    # ─── Availability ───
+    # Availability
 
     def _get_seat_type(self) -> str:
         btn_id = self.seat_type_group.checkedId()
@@ -302,14 +329,18 @@ class NewBookingView(QWidget):
                     f"Unit price: \u00a3{unit:.2f}  \u00d7  {self.num_tickets.value()} tickets  =  "
                     f"<b>\u00a3{total:.2f}</b>"
                 )
-                self.avail_label.setStyleSheet(f"color: {SUCCESS}; background: transparent; padding: 8px;")
+                self.avail_label.setStyleSheet(
+                    f"color: {SUCCESS}; background: transparent; padding: 8px;"
+                )
                 self.book_btn.setEnabled(True)
             else:
                 self.avail_label.setText(
                     f"\u2717  Only {seats} {seat_type} seat(s) available "
                     f"(requested {self.num_tickets.value()})"
                 )
-                self.avail_label.setStyleSheet(f"color: {ACCENT}; background: transparent; padding: 8px;")
+                self.avail_label.setStyleSheet(
+                    f"color: {ACCENT}; background: transparent; padding: 8px;"
+                )
                 self.book_btn.setEnabled(False)
 
             self.avail_label.show()
@@ -322,7 +353,7 @@ class NewBookingView(QWidget):
                     pass
             error_dialog(self, detail)
 
-    # ─── Create booking ───
+    # Create booking
 
     def _create_booking(self):
         name = self.name_input.text().strip()
@@ -366,7 +397,7 @@ class NewBookingView(QWidget):
             self.book_btn.setEnabled(True)
             self.book_btn.setText("Confirm Booking")
 
-    # ─── Receipt ───
+    # Receipt
 
     def _show_receipt(self, booking: dict):
         while self.receipt_card._layout.count():
@@ -447,7 +478,7 @@ class NewBookingView(QWidget):
         clipboard.setText(text)
         show_toast(self, "Receipt copied to clipboard!", success=True)
 
-    # ─── Reset ───
+    # Reset
 
     def _reset_form(self):
         self.name_input.clear()

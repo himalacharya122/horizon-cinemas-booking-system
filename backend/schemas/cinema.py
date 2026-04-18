@@ -3,8 +3,9 @@ backend/schemas/cinema.py
 Pydantic models for cinema, city, screen, and seat data.
 """
 
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 # City
@@ -57,8 +58,8 @@ class CinemaOut(BaseModel):
 
 
 class CinemaCreate(BaseModel):
-    city_id: Optional[int] = None          # use existing city
-    new_city_name: Optional[str] = None    # or create a new city
+    city_id: Optional[int] = None  # use existing city
+    new_city_name: Optional[str] = None  # or create a new city
     cinema_name: str = Field(..., min_length=1, max_length=150)
     address: str = Field(..., min_length=1, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=20)

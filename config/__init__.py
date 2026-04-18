@@ -1,1 +1,1 @@
-from config.settings import *
+from config.settings import *  # noqa: F403

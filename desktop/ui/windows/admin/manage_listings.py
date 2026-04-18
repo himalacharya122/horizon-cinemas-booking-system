@@ -3,24 +3,39 @@ desktop/ui/windows/admin/manage_listings.py
 Admin view: listing management — assign films to screens with showings.
 """
 
-from datetime import date, time
-from PyQt6.QtCore import Qt, QDate, QTime # type: ignore
-from PyQt6.QtWidgets import ( # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QDialog, QComboBox, QDateEdit, QTimeEdit,
-    QFormLayout, QDialogButtonBox, QPushButton, QLabel, QSpinBox,
+from PyQt6.QtCore import QDate, QTime  # type: ignore
+from PyQt6.QtWidgets import (  # type: ignore
+    QComboBox,
+    QDateEdit,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QTimeEdit,
+    QVBoxLayout,
+    QWidget,
 )
 
-from desktop.ui.theme import SPACING_MD, SPACING_LG, ACCENT, SMOKE
-from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button, danger_button,
-    separator, show_toast, error_dialog, confirm_dialog, Card,
-)
 from desktop.api_client import api
+from desktop.ui.theme import SPACING_LG, SPACING_MD
+from desktop.ui.widgets import (
+    confirm_dialog,
+    danger_button,
+    error_dialog,
+    heading_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
+)
 
 
 class ManageListingsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -53,9 +68,9 @@ class ManageListingsView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels([
-            "ID", "Film", "Screen", "Start", "End", "Showings", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["ID", "Film", "Screen", "Start", "End", "Showings", "Status"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
 
@@ -94,20 +109,25 @@ class ManageListingsView(QWidget):
                 listings = api.get_all_listings()
 
             self.table.setRowCount(len(listings))
-            for row, l in enumerate(listings):
-                self.table.setItem(row, 0, QTableWidgetItem(str(l["listing_id"])))
-                self.table.setItem(row, 1, QTableWidgetItem(l.get("film_title", "")))
-                self.table.setItem(row, 2, QTableWidgetItem(
-                    f"Screen {l.get('screen_number', '?')} @ {l.get('cinema_name', '')}"
-                ))
-                self.table.setItem(row, 3, QTableWidgetItem(str(l["start_date"])))
-                self.table.setItem(row, 4, QTableWidgetItem(str(l["end_date"])))
+            for row, listing in enumerate(listings):
+                self.table.setItem(row, 0, QTableWidgetItem(str(listing["listing_id"])))
+                self.table.setItem(row, 1, QTableWidgetItem(listing.get("film_title", "")))
+                self.table.setItem(
+                    row,
+                    2,
+                    QTableWidgetItem(
+                        f"Screen {listing.get('screen_number', '?')} @ "
+                        f"{listing.get('cinema_name', '')}"
+                    ),
+                )
+                self.table.setItem(row, 3, QTableWidgetItem(str(listing["start_date"])))
+                self.table.setItem(row, 4, QTableWidgetItem(str(listing["end_date"])))
 
-                showings = l.get("showings", [])
+                showings = listing.get("showings", [])
                 times = ", ".join(str(s.get("show_time", ""))[:5] for s in showings)
                 self.table.setItem(row, 5, QTableWidgetItem(times or "—"))
 
-                status = "Active" if l["is_active"] else "Removed"
+                status = "Active" if listing["is_active"] else "Removed"
                 self.table.setItem(row, 6, QTableWidgetItem(status))
 
         except Exception as e:
@@ -145,7 +165,6 @@ class ManageListingsView(QWidget):
 
 
 class ListingDialog(QDialog):
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("New Listing")
@@ -223,9 +242,7 @@ class ListingDialog(QDialog):
 
             cinemas = api.get_cinemas()
             for c in cinemas:
-                self.cinema_combo.addItem(
-                    f"{c['cinema_name']}  ({c.get('city_name', '')})", c
-                )
+                self.cinema_combo.addItem(f"{c['cinema_name']}  ({c.get('city_name', '')})", c)
         except Exception:
             pass
 
@@ -244,10 +261,12 @@ class ListingDialog(QDialog):
     def get_data(self) -> dict:
         showings = []
         for time_edit, type_combo in self._showings:
-            showings.append({
-                "show_time": time_edit.time().toString("HH:mm:ss"),
-                "show_type": type_combo.currentText(),
-            })
+            showings.append(
+                {
+                    "show_time": time_edit.time().toString("HH:mm:ss"),
+                    "show_type": type_combo.currentText(),
+                }
+            )
         return {
             "film_id": self.film_combo.currentData(),
             "screen_id": self.screen_combo.currentData(),

@@ -13,11 +13,10 @@ Test cases:
 from datetime import date, timedelta
 
 from backend.core.security import create_access_token
-from tests.conftest import auth_header # type: ignore
+from tests.conftest import auth_header  # type: ignore
 
 
 class TestHealthCheck:
-
     def test_health(self, seeded_client):
         """TC-GEN-01"""
         client, _ = seeded_client
@@ -27,7 +26,6 @@ class TestHealthCheck:
 
 
 class TestEdgeCases:
-
     def test_nonexistent_route(self, seeded_client):
         """TC-GEN-02"""
         client, _ = seeded_client
@@ -48,7 +46,10 @@ class TestEdgeCases:
         """TC-GEN-04"""
         client, seed = seeded_client
         expired = create_access_token(
-            1, "x", "booking_staff", 1,
+            1,
+            "x",
+            "booking_staff",
+            1,
             expires_delta=timedelta(seconds=-10),
         )
         resp = client.get("/api/v1/films", headers=auth_header(expired))
@@ -59,13 +60,18 @@ class TestEdgeCases:
         client, seed = seeded_client
         # First create a booking
         showing = seed["showings"]["morning"]
-        client.post("/api/v1/bookings", json={
-            "showing_id": showing.showing_id,
-            "show_date": (date.today() + timedelta(days=1)).isoformat(),
-            "customer_name": "Search Test User",
-            "customer_email": "search@test.com",
-            "seat_type": "lower_hall", "num_tickets": 1,
-        }, headers=auth_header(staff_token))
+        client.post(
+            "/api/v1/bookings",
+            json={
+                "showing_id": showing.showing_id,
+                "show_date": (date.today() + timedelta(days=1)).isoformat(),
+                "customer_name": "Search Test User",
+                "customer_email": "search@test.com",
+                "seat_type": "lower_hall",
+                "num_tickets": 1,
+            },
+            headers=auth_header(staff_token),
+        )
 
         # Search by name
         resp = client.get(

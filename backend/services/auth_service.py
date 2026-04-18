@@ -4,11 +4,12 @@ Business logic for user authentication.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session # type: ignore
 
-from backend.models.user import User
-from backend.core.security import verify_password, create_access_token
+from sqlalchemy.orm import Session  # type: ignore
+
 from backend.core.exceptions import AuthenticationError
+from backend.core.security import create_access_token, verify_password
+from backend.models.user import User
 
 
 def authenticate_user(db: Session, username: str, password: str) -> dict:
@@ -32,9 +33,7 @@ def authenticate_user(db: Session, username: str, password: str) -> dict:
     Raises:
         AuthenticationError - on bad username, bad password, or inactive account.
     """
-    user: User | None = (
-        db.query(User).filter(User.username == username).first()
-    )
+    user: User | None = db.query(User).filter(User.username == username).first()
 
     if user is None:
         raise AuthenticationError("Invalid username or password")

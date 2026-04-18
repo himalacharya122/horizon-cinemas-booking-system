@@ -3,26 +3,39 @@ desktop/ui/windows/manager/create_staff.py
 Manager view: create new staff user accounts.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QComboBox, QFormLayout, QScrollArea,
+    QComboBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, GOLD,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    GOLD,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    SUCCESS,
+    TEXT_SECONDARY,
+    body_font,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button,
-    separator, show_toast, error_dialog, Card, muted_label,
+    Card,
+    error_dialog,
+    heading_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
 )
-from desktop.api_client import api
 
 
 class CreateStaffView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -62,7 +75,9 @@ class CreateStaffView(QWidget):
 
         def _form_label(text):
             lbl = QLabel(text)
-            lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500;")
+            lbl.setStyleSheet(
+                f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500;"
+            )
             return lbl
 
         self.username_input = QLineEdit()
@@ -145,14 +160,16 @@ class CreateStaffView(QWidget):
             return
 
         try:
-            result = api.create_user({
-                "username": username,
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "role": role,
-                "cinema_id": cinema_id,
-            })
+            result = api.create_user(
+                {
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                    "role": role,
+                    "cinema_id": cinema_id,
+                }
+            )
             msg = result.get("message", "User created.")
             self.result_label.setText(
                 f"\u2705 {msg}\n"

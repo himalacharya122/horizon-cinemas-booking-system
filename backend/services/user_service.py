@@ -5,14 +5,13 @@ User management: list staff, reset passwords, activity logs.
 
 from typing import Optional
 
-from sqlalchemy import func, desc  # type: ignore
 from sqlalchemy.orm import Session, joinedload  # type: ignore
 
-from backend.models.user import User, Role
-from backend.models.cinema import Cinema
+from backend.core.exceptions import AuthenticationError, NotFoundError, ValidationError
+from backend.core.security import hash_password, verify_password
 from backend.models.booking import Booking
-from backend.core.security import hash_password
-from backend.core.exceptions import NotFoundError, ValidationError
+from backend.models.cinema import Cinema
+from backend.models.user import Role, User
 
 
 def get_all_users(
@@ -22,20 +21,15 @@ def get_all_users(
     active_only: bool = True,
 ) -> list[dict]:
     """Return all users with their cinema and role info."""
-    query = (
-        db.query(User)
-        .options(
-            joinedload(User.role),
-            joinedload(User.cinema),
-        )
+    query = db.query(User).options(
+        joinedload(User.role),
+        joinedload(User.cinema),
     )
 
     if cinema_id:
         query = query.filter(User.cinema_id == cinema_id)
     if role_name:
-        query = query.join(Role, User.role_id == Role.role_id).filter(
-            Role.role_name == role_name
-        )
+        query = query.join(Role, User.role_id == Role.role_id).filter(Role.role_name == role_name)
     if active_only:
         query = query.filter(User.is_active == True)  # noqa: E712
 
@@ -80,6 +74,35 @@ def reset_user_password(
         "user_id": user.user_id,
         "username": user.username,
         "message": f"Password for '{user.username}' has been reset successfully.",
+    }
+
+
+def change_my_password(
+    db: Session,
+    user_id: int,
+    current_password: str,
+    new_password: str,
+) -> dict:
+    """
+    Allow a user to change their own password.
+    Requires verifying the current password first.
+    """
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise NotFoundError("User")
+
+    if not verify_password(current_password, user.password_hash):
+        raise AuthenticationError("Incorrect current password.")
+
+    if not new_password or len(new_password) < 8:
+        raise ValidationError("New password must be at least 8 characters.")
+
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
+    return {
+        "user_id": user.user_id,
+        "message": "Password updated successfully.",
     }
 
 
@@ -160,9 +183,7 @@ def create_user(
     }
 
 
-def get_user_activity(
-    db: Session, user_id: int, limit: int = 50
-) -> list[dict]:
+def get_user_activity(db: Session, user_id: int, limit: int = 50) -> list[dict]:
     """
     Get recent booking activity for a specific staff member.
     Returns the most recent bookings they processed.

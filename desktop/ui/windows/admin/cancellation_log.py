@@ -5,23 +5,37 @@ Admin view: view all cancellations across all cinemas with fees and refund info.
 
 from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QComboBox, QLabel,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    DANGER, TEXT_SECONDARY, TEXT_MUTED,
-    body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    DANGER,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    TEXT_MUTED,
+    TEXT_SECONDARY,
+    body_font,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button,
-    separator, error_dialog, muted_label, Card,
+    Card,
+    error_dialog,
+    heading_label,
+    muted_label,
+    primary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class CancellationLogView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -77,7 +91,9 @@ class CancellationLogView(QWidget):
         self.fees_lbl = QLabel("\u00a30.00")
         self.fees_lbl.setFont(body_font(18))
         self.fees_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.fees_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 700;")
+        self.fees_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 700;"
+        )
         fees_title = QLabel("Fees Collected")
         fees_title.setFont(body_font(9))
         fees_title.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
@@ -90,7 +106,9 @@ class CancellationLogView(QWidget):
         self.refund_lbl = QLabel("\u00a30.00")
         self.refund_lbl.setFont(body_font(18))
         self.refund_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.refund_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 700;")
+        self.refund_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 700;"
+        )
         refund_title = QLabel("Total Refunded")
         refund_title.setFont(body_font(9))
         refund_title.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
@@ -107,10 +125,19 @@ class CancellationLogView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(9)
-        self.table.setHorizontalHeaderLabels([
-            "Reference", "Film", "Cinema", "Show Date", "Customer",
-            "Original Cost", "Fee (50%)", "Refund", "Cancelled At"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            [
+                "Reference",
+                "Film",
+                "Cinema",
+                "Show Date",
+                "Customer",
+                "Original Cost",
+                "Fee (50%)",
+                "Refund",
+                "Cancelled At",
+            ]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -162,7 +189,9 @@ class CancellationLogView(QWidget):
             self.table.setItem(row, 3, QTableWidgetItem(str(b["show_date"])))
             self.table.setItem(row, 4, QTableWidgetItem(b["customer_name"]))
             self.table.setItem(row, 5, QTableWidgetItem(f"\u00a3{b['total_cost']:.2f}"))
-            self.table.setItem(row, 6, QTableWidgetItem(f"\u00a3{b.get('cancellation_fee', 0):.2f}"))
+            self.table.setItem(
+                row, 6, QTableWidgetItem(f"\u00a3{b.get('cancellation_fee', 0):.2f}")
+            )
             self.table.setItem(row, 7, QTableWidgetItem(f"\u00a3{b.get('refund_amount', 0):.2f}"))
             cancelled_at = b.get("cancelled_at") or "\u2014"
             if cancelled_at != "\u2014":

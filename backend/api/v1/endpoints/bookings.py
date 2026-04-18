@@ -6,17 +6,19 @@ Booking creation, cancellation, lookup, and availability checking.
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session # type: ignore
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session  # type: ignore
 
+from backend.api.deps import get_current_user
 from backend.core.database import get_db
 from backend.core.exceptions import HCBSException
-from backend.api.deps import get_current_user
-
 from backend.schemas.booking import (
-    BookingCreate, BookingOut, BookedSeatOut,
-    CancelRequest, CancelResponse,
-    AvailabilityRequest, AvailabilityResponse,
+    AvailabilityRequest,
+    AvailabilityResponse,
+    BookingCreate,
+    BookingOut,
+    CancelRequest,
+    CancelResponse,
 )
 from backend.services import booking_service
 
@@ -52,9 +54,7 @@ def create_booking(
     Automatically assigns seats and calculates the total cost.
     """
     try:
-        booking = booking_service.create_booking(
-            db, body.model_dump(), booked_by=int(user["sub"])
-        )
+        booking = booking_service.create_booking(db, body.model_dump(), booked_by=int(user["sub"]))
         return _serialise_booking(booking)
     except HCBSException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
@@ -118,8 +118,14 @@ def search_bookings(
 ):
     """Search bookings with optional filters."""
     bookings = booking_service.search_bookings(
-        db, cinema_id, customer_name, customer_email, show_date, status,
-        customer_phone=customer_phone, booked_by=booked_by,
+        db,
+        cinema_id,
+        customer_name,
+        customer_email,
+        show_date,
+        status,
+        customer_phone=customer_phone,
+        booked_by=booked_by,
         booking_date=booking_date,
     )
     return [_serialise_booking(b) for b in bookings]

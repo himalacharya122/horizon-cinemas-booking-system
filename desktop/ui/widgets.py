@@ -4,31 +4,42 @@ Reusable UI components: buttons, cards, form rows, badges, toast messages.
 Dark cinema theme.
 """
 
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve  # type: ignore
-from PyQt6.QtGui import QFont  # type: ignore
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
-    QFrame, QLineEdit, QComboBox, QSpinBox, QDateEdit, QMessageBox,
+    QFrame,
     QGraphicsOpacityEffect,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 from desktop.ui.theme import (
-    ACCENT, DANGER, SUCCESS, WHITE, GOLD,
-    BG_CARD, BG_DARKEST, BG_DARK, BG_HOVER, BORDER, BORDER_LIGHT,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    RADIUS, heading_font, body_font, SPACING_SM, SPACING_MD,
-    # Legacy re-exports so admin pages can do: from widgets import body_font
-    SMOKE, SILVER, SNOW, CHARCOAL, BLACK,
+    ACCENT,
+    BG_CARD,
+    BORDER,
+    DANGER,
+    RADIUS,
+    SPACING_MD,
+    SPACING_SM,
+    SUCCESS,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    WHITE,
+    body_font,
+    heading_font,
 )
 
-
 # Buttons
+
 
 def primary_button(text: str, icon_text: str = "") -> QPushButton:
     btn = QPushButton(f"  {icon_text}  {text}  " if icon_text else text)
     btn.setProperty("primary", True)
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
-    btn.setStyleSheet(btn.styleSheet())   # force property re-eval
+    btn.setStyleSheet(btn.styleSheet())  # force property re-eval
     return btn
 
 
@@ -47,6 +58,7 @@ def danger_button(text: str) -> QPushButton:
 
 
 # Labels
+
 
 def heading_label(text: str, size: int = 18) -> QLabel:
     lbl = QLabel(text)
@@ -90,7 +102,8 @@ def status_badge(status: str) -> QLabel:
     return badge_label(status.capitalize(), colour)
 
 
-# ─── Cards ───
+# Cards
+
 
 class Card(QFrame):
     """A dark bordered card container with rounded corners."""
@@ -116,6 +129,7 @@ class Card(QFrame):
 
 
 # Form helpers
+
 
 def form_row(label_text: str, widget: QWidget, stretch: bool = True) -> QHBoxLayout:
     """Standard form row: label on left, widget on right."""
@@ -150,6 +164,7 @@ def labelled_value(label: str, value: str) -> QHBoxLayout:
 
 # Separator
 
+
 def separator() -> QFrame:
     line = QFrame()
     line.setFrameShape(QFrame.Shape.HLine)
@@ -158,6 +173,7 @@ def separator() -> QFrame:
 
 
 # Toast notification
+
 
 class Toast(QLabel):
     """Temporary notification that fades out automatically."""
@@ -204,9 +220,12 @@ def show_toast(parent, message: str, success: bool = True, duration: int = 3000)
 
 # Message boxes
 
+
 def confirm_dialog(parent, title: str, message: str) -> bool:
     reply = QMessageBox.question(
-        parent, title, message,
+        parent,
+        title,
+        message,
         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         QMessageBox.StandardButton.No,
     )

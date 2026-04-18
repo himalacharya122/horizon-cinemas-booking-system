@@ -18,20 +18,20 @@ Test cases:
   TC-PRC-08  Prices round to 2 decimal places
 """
 
-import pytest # type: ignore
 from decimal import Decimal
+
+import pytest  # type: ignore
 
 from backend.models.booking import BasePrice
 
 
 class TestPricing:
-
     def _make_bp(self, price: float) -> BasePrice:
-        bp = BasePrice.__new__(BasePrice)
-        bp.lower_hall_price = Decimal(str(price))
-        bp.city_id = 1
-        bp.show_period = "evening"
-        return bp
+        return BasePrice(
+            lower_hall_price=Decimal(str(price)),
+            city_id=1,
+            show_period="evening",
+        )
 
     def test_lower_hall_returned_directly(self):
         """TC-PRC-01"""
@@ -89,18 +89,17 @@ class TestPricing:
         """Verify all prices from the spec table."""
         spec = {
             "Birmingham": {"morning": 5, "afternoon": 6, "evening": 7},
-            "Bristol":    {"morning": 6, "afternoon": 7, "evening": 8},
-            "Cardiff":    {"morning": 5, "afternoon": 6, "evening": 7},
-            "London":     {"morning": 10, "afternoon": 11, "evening": 12},
+            "Bristol": {"morning": 6, "afternoon": 7, "evening": 8},
+            "Cardiff": {"morning": 5, "afternoon": 6, "evening": 7},
+            "London": {"morning": 10, "afternoon": 11, "evening": 12},
         }
         for city, periods in spec.items():
             for period, lower in periods.items():
                 bp = self._make_bp(lower)
                 expected_upper = round(lower * 1.20, 2)
                 expected_vip = round(lower * 1.44, 2)
-                assert bp.price_for_seat_type("lower_hall") == lower, \
-                    f"{city} {period} lower_hall"
-                assert bp.price_for_seat_type("upper_gallery") == expected_upper, \
+                assert bp.price_for_seat_type("lower_hall") == lower, f"{city} {period} lower_hall"
+                assert bp.price_for_seat_type("upper_gallery") == expected_upper, (
                     f"{city} {period} upper_gallery"
-                assert bp.price_for_seat_type("vip") == expected_vip, \
-                    f"{city} {period} vip"
+                )
+                assert bp.price_for_seat_type("vip") == expected_vip, f"{city} {period} vip"

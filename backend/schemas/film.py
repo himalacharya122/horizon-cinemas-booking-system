@@ -4,8 +4,9 @@ Pydantic models for film, listing, and showing data.
 """
 
 from datetime import date, time
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 # Film
@@ -114,6 +115,7 @@ class ShowingDetail(BaseModel):
 
 class FilmListingItem(BaseModel):
     """One film card in the listings window — includes showings + prices."""
+
     film_id: int
     title: str
     description: Optional[str] = None

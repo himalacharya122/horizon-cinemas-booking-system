@@ -4,11 +4,11 @@ Business logic for cities, cinemas, screens, seats, and base prices.
 Manager-level operations: add new cinemas in existing or new cities.
 """
 
-from sqlalchemy.orm import Session, joinedload # type: ignore
+from sqlalchemy.orm import Session, joinedload  # type: ignore
 
-from backend.models.cinema import City, Cinema, Screen, Seat
-from backend.models.booking import BasePrice
 from backend.core.exceptions import NotFoundError, ValidationError
+from backend.models.booking import BasePrice
+from backend.models.cinema import Cinema, City, Screen, Seat
 
 
 # Cities
@@ -35,7 +35,9 @@ def create_city(db: Session, city_name: str) -> City:
 
 
 # Cinemas
-def get_all_cinemas(db: Session, city_id: int | None = None, active_only: bool = True) -> list[Cinema]:
+def get_all_cinemas(
+    db: Session, city_id: int | None = None, active_only: bool = True
+) -> list[Cinema]:
     query = db.query(Cinema).options(
         joinedload(Cinema.city),
         joinedload(Cinema.screens),

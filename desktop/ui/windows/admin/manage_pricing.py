@@ -3,27 +3,42 @@ desktop/ui/windows/admin/manage_pricing.py
 Admin view: view and update base pricing per city and time period.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QComboBox, QLabel, QDialog, QFormLayout,
-    QDialogButtonBox, QDoubleSpinBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, GOLD, WHITE,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    GOLD,
+    SPACING_LG,
+    SPACING_MD,
+    TEXT_MUTED,
+    body_font,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button,
-    separator, show_toast, error_dialog, Card, muted_label,
+    Card,
+    error_dialog,
+    heading_label,
+    muted_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
 )
-from desktop.api_client import api
 
 
 class ManagePricingView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -67,9 +82,9 @@ class ManagePricingView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels([
-            "City", "Period", "Lower Hall", "Upper Gallery", "VIP"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["City", "Period", "Lower Hall", "Upper Gallery", "VIP"]
+        )
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -87,7 +102,9 @@ class ManagePricingView(QWidget):
                 self.table.setItem(row, 0, QTableWidgetItem(cities.get(p["city_id"], "?")))
                 self.table.setItem(row, 1, QTableWidgetItem(p["show_period"].capitalize()))
                 self.table.setItem(row, 2, QTableWidgetItem(f"\u00a3{p['lower_hall_price']:.2f}"))
-                self.table.setItem(row, 3, QTableWidgetItem(f"\u00a3{p['upper_gallery_price']:.2f}"))
+                self.table.setItem(
+                    row, 3, QTableWidgetItem(f"\u00a3{p['upper_gallery_price']:.2f}")
+                )
                 self.table.setItem(row, 4, QTableWidgetItem(f"\u00a3{p['vip_price']:.2f}"))
 
             self.count_label.setText(f"{len(prices)} pricing rule(s)")
@@ -106,7 +123,6 @@ class ManagePricingView(QWidget):
 
 
 class PricingDialog(QDialog):
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Set Base Price")

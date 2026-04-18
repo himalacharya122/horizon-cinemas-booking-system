@@ -13,11 +13,10 @@ from pathlib import Path
 # Ensure project root is on sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget # type: ignore
-from PyQt6.QtCore import Qt, QSize # type: ignore
-from PyQt6.QtGui import QIcon # type: ignore
+from PyQt6.QtCore import QSize  # type: ignore
+from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget  # type: ignore
 
-from desktop.ui.theme import load_fonts, GLOBAL_QSS
+from desktop.ui.theme import GLOBAL_QSS, load_fonts
 from desktop.ui.windows.login_window import LoginWindow
 from desktop.ui.windows.main_window import MainWindow
 

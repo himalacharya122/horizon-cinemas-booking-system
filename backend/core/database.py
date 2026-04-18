@@ -9,17 +9,17 @@ Usage in endpoints:
         ...
 """
 
-from sqlalchemy import create_engine # type: ignore
-from sqlalchemy.orm import sessionmaker, declarative_base # type: ignore
+from sqlalchemy import create_engine  # type: ignore
+from sqlalchemy.orm import declarative_base, sessionmaker  # type: ignore
 
 from config.settings import DATABASE_URL
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,      # reconnect on stale connections
+    pool_pre_ping=True,  # reconnect on stale connections
     pool_size=10,
     max_overflow=20,
-    echo=False,               # set True to log all SQL
+    echo=False,  # set True to log all SQL
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

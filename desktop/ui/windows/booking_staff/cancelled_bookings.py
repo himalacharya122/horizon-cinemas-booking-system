@@ -3,25 +3,30 @@ desktop/ui/windows/booking_staff/cancelled_bookings.py
 View all cancelled bookings for the staff member's cinema.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QTableWidget, QTableWidgetItem, QHeaderView,
+    QHBoxLayout,
+    QHeaderView,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    DANGER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
 )
 from desktop.ui.widgets import (
-    heading_label, muted_label, secondary_button,
-    separator, error_dialog,
+    error_dialog,
+    heading_label,
+    muted_label,
+    secondary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class CancelledBookingsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -49,10 +54,19 @@ class CancelledBookingsView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(9)
-        self.table.setHorizontalHeaderLabels([
-            "Reference", "Film", "Show Date", "Customer",
-            "Tickets", "Original Cost", "Cancel Fee", "Refund", "Cancelled At"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            [
+                "Reference",
+                "Film",
+                "Show Date",
+                "Customer",
+                "Tickets",
+                "Original Cost",
+                "Cancel Fee",
+                "Refund",
+                "Cancelled At",
+            ]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -82,7 +96,11 @@ class CancelledBookingsView(QWidget):
             self.table.setItem(row, 3, QTableWidgetItem(b["customer_name"]))
             self.table.setItem(row, 4, QTableWidgetItem(str(b["num_tickets"])))
             self.table.setItem(row, 5, QTableWidgetItem(f"\u00a3{b['total_cost']:.2f}"))
-            self.table.setItem(row, 6, QTableWidgetItem(f"\u00a3{b.get('cancellation_fee', 0):.2f}"))
+            self.table.setItem(
+                row, 6, QTableWidgetItem(f"\u00a3{b.get('cancellation_fee', 0):.2f}")
+            )
             self.table.setItem(row, 7, QTableWidgetItem(f"\u00a3{b.get('refund_amount', 0):.2f}"))
             cancelled = b.get("cancelled_at", "")
-            self.table.setItem(row, 8, QTableWidgetItem(str(cancelled)[:19] if cancelled else "\u2014"))
+            self.table.setItem(
+                row, 8, QTableWidgetItem(str(cancelled)[:19] if cancelled else "\u2014")
+            )

@@ -7,6 +7,7 @@ Usage:
 """
 
 import uvicorn
+
 from config.settings import API_HOST, API_PORT, DEBUG
 
 if __name__ == "__main__":

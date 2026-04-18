@@ -17,48 +17,48 @@ Fonts:
 """
 
 from pathlib import Path
-from PyQt6.QtGui import QFontDatabase, QFont  # type: ignore
-from PyQt6.QtWidgets import QApplication  # type: ignore
+
+from PyQt6.QtGui import QFont, QFontDatabase  # type: ignore
 
 # Dark Cinema Backgrounds
-BG_DARKEST   = "#222831"   # Main app / content area background
-BG_DARK      = "#393E46"   # Sidebar, panels
-BG_CARD      = "#2E3440"   # Slightly lifted surface (blend of dark tones)
-BG_INPUT     = "#3F454F"   # Input fields, combo boxes (lighter than panel)
-BG_HOVER     = "#4A505A"   # Hover state
+BG_DARKEST = "#222831"  # Main app / content area background
+BG_DARK = "#393E46"  # Sidebar, panels
+BG_CARD = "#2E3440"  # Slightly lifted surface (blend of dark tones)
+BG_INPUT = "#3F454F"  # Input fields, combo boxes (lighter than panel)
+BG_HOVER = "#4A505A"  # Hover state
 
 # Borders
-BORDER       = "#393E46"   # Default borders
-BORDER_LIGHT = "#4A505A"   # Focus / lighter borders
+BORDER = "#393E46"  # Default borders
+BORDER_LIGHT = "#4A505A"  # Focus / lighter borders
 
-# ─── Text ───
-TEXT_PRIMARY   = "#EEEEEE"  # Primary readable text
+# Text
+TEXT_PRIMARY = "#EEEEEE"  # Primary readable text
 TEXT_SECONDARY = "#C9D1D9"  # Softer light gray
-TEXT_MUTED     = "#9AA4AF"  # Muted text
+TEXT_MUTED = "#9AA4AF"  # Muted text
 
-# ─── Accent — Teal Accent ───
-ACCENT       = "#00ADB5"
-ACCENT_HOVER = "#0199A1"   # Slightly darker teal for hover
-ACCENT_LIGHT = "#0F2E30"   # Subtle teal-tinted background
+# Accent — Teal Accent
+ACCENT = "#00ADB5"
+ACCENT_HOVER = "#0199A1"  # Slightly darker teal for hover
+ACCENT_LIGHT = "#0F2E30"  # Subtle teal-tinted background
 
-# ─── Supporting Colours ───
-GOLD         = "#F6C744"      # IMDb ratings, stars
-SUCCESS      = "#2DD4BF"      # Confirmed, positive
-DANGER       = "#FC5C65"      # Cancel, errors
+# Supporting Colours
+GOLD = "#F6C744"  # IMDb ratings, stars
+SUCCESS = "#2DD4BF"  # Confirmed, positive
+DANGER = "#FC5C65"  # Cancel, errors
 DANGER_HOVER = "#EB3B5A"
 
-# ─── Legacy aliases (backward compatibility with admin/manager pages) ───
-WHITE    = "#FFFFFF"
-SNOW     = BG_CARD
-SILVER   = BORDER
-SMOKE    = TEXT_SECONDARY
-SLATE    = "#6B7280"
+# Legacy aliases (backward compatibility with admin/manager pages)
+WHITE = "#FFFFFF"
+SNOW = BG_CARD
+SILVER = BORDER
+SMOKE = TEXT_SECONDARY
+SLATE = "#6B7280"
 CHARCOAL = TEXT_PRIMARY
-BLACK    = "#F5F5F7"
+BLACK = "#F5F5F7"
 
-ACCENT_LIGHT_LEGACY = ACCENT_LIGHT   # some old code may reference
+ACCENT_LIGHT_LEGACY = ACCENT_LIGHT  # some old code may reference
 
-# ─── Font Loading ───
+# Font Loading
 FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 _fonts_loaded = False
 
@@ -89,21 +89,21 @@ def body_font(size: int = 11) -> QFont:
     return QFont("Inter", size)
 
 
-# ─── Spacing / Sizing ───
-RADIUS      = "6px"
-RADIUS_LG   = "10px"
-SPACING_XS  = 4
-SPACING_SM  = 8
-SPACING_MD  = 16
-SPACING_LG  = 24
-SPACING_XL  = 32
+# Spacing / Sizing
+RADIUS = "6px"
+RADIUS_LG = "10px"
+SPACING_XS = 4
+SPACING_SM = 8
+SPACING_MD = 16
+SPACING_LG = 24
+SPACING_XL = 32
 
 INPUT_HEIGHT = "38px"
-BTN_HEIGHT   = "40px"
+BTN_HEIGHT = "40px"
 
-# ─── Global QSS — Dark Cinema Theme ───
+# Global QSS — Dark Cinema Theme
 GLOBAL_QSS = f"""
-/* ═══ Base ═══ */
+/* Base */
 QMainWindow, QDialog {{
     background-color: {BG_DARKEST};
     color: {TEXT_PRIMARY};
@@ -117,7 +117,7 @@ QWidget {{
     font-size: 11pt;
 }}
 
-/* ═══ Labels ═══ */
+/* Labels */
 QLabel {{
     color: {TEXT_PRIMARY};
     background: transparent;
@@ -145,7 +145,7 @@ QLabel[muted="true"] {{
     background: transparent;
 }}
 
-/* ═══ Inputs ═══ */
+/* Inputs */
 QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QTimeEdit {{
     background-color: {BG_INPUT};
     border: 1px solid {BORDER};
@@ -173,7 +173,7 @@ QLineEdit[echoMode="2"] {{
     lineedit-password-character: 9679;
 }}
 
-/* ═══ Combo Box ═══ */
+/* Combo Box */
 QComboBox {{
     background-color: {BG_INPUT};
     border: 1px solid {BORDER};
@@ -206,7 +206,7 @@ QComboBox QAbstractItemView {{
     outline: 0;
 }}
 
-/* ═══ Buttons ═══ */
+/* Buttons */
 QPushButton {{
     font-family: "Inter", "Segoe UI", sans-serif;
     font-size: 11pt;
@@ -275,7 +275,7 @@ QRadioButton::indicator, QCheckBox::indicator {{
     height: 18px;
 }}
 
-/* ═══ Tables ═══ */
+/* Tables */
 QTableWidget, QTableView {{
     background-color: {BG_CARD};
     alternate-background-color: {BG_DARK};
@@ -304,7 +304,7 @@ QTableWidget::item {{
     padding: 6px 12px;
 }}
 
-/* ═══ Scroll Bars ═══ */
+/* Scroll Bars */
 QScrollBar:vertical {{
     background: {BG_DARK};
     width: 8px;
@@ -337,7 +337,7 @@ QScrollBar::handle:horizontal {{
     min-width: 30px;
 }}
 
-/* ═══ Tab Widget ═══ */
+/* Tab Widget */
 QTabWidget::pane {{
     border: 1px solid {BORDER};
     border-radius: {RADIUS};
@@ -370,7 +370,7 @@ QTabBar::tab:hover:!selected {{
     color: {TEXT_PRIMARY};
 }}
 
-/* ═══ Group Boxes ═══ */
+/* Group Boxes */
 QGroupBox {{
     font-family: "Manrope", "Segoe UI", sans-serif;
     font-weight: 600;
@@ -390,7 +390,7 @@ QGroupBox::title {{
     background-color: {BG_DARKEST};
 }}
 
-/* ═══ Status Bar ═══ */
+/* Status Bar */
 QStatusBar {{
     background-color: {BG_DARK};
     color: {TEXT_SECONDARY};
@@ -398,7 +398,7 @@ QStatusBar {{
     border-top: 1px solid {BORDER};
 }}
 
-/* ═══ Message Boxes ═══ */
+/* Message Boxes */
 QMessageBox {{
     background-color: {BG_CARD};
 }}
@@ -413,7 +413,7 @@ QMessageBox QPushButton {{
     min-width: 80px;
 }}
 
-/* ═══ Text Edit ═══ */
+/* Text Edit */
 QTextEdit, QPlainTextEdit {{
     background-color: {BG_INPUT};
     border: 1px solid {BORDER};
@@ -423,7 +423,7 @@ QTextEdit, QPlainTextEdit {{
     font-size: 10pt;
 }}
 
-/* ═══ Calendar Popup ═══ */
+/* Calendar Popup */
 QCalendarWidget {{
     background-color: {BG_CARD};
     color: {TEXT_PRIMARY};
@@ -440,7 +440,7 @@ QCalendarWidget QWidget#qt_calendar_navigationbar {{
     background-color: {BG_DARK};
 }}
 
-/* ═══ Tooltips ═══ */
+/* Tooltips */
 QToolTip {{
     background-color: {BG_CARD};
     color: {TEXT_PRIMARY};

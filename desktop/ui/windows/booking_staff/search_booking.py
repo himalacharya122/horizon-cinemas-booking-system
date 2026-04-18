@@ -3,27 +3,37 @@ desktop/ui/windows/booking_staff/search_booking.py
 Search bookings by reference, customer name, email, or phone.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel,
-    QTableWidget, QTableWidgetItem, QHeaderView, QComboBox,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, DANGER, WHITE,
-    BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    TEXT_SECONDARY,
 )
 from desktop.ui.widgets import (
-    heading_label, subheading_label, muted_label, primary_button,
-    secondary_button, Card, separator, labelled_value, status_badge,
-    show_toast, error_dialog,
+    Card,
+    error_dialog,
+    heading_label,
+    muted_label,
+    primary_button,
+    secondary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class SearchBookingView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -107,10 +117,9 @@ class SearchBookingView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(9)
-        self.table.setHorizontalHeaderLabels([
-            "Reference", "Film", "Date", "Time", "Customer",
-            "Phone", "Tickets", "Total", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["Reference", "Film", "Date", "Time", "Customer", "Phone", "Tickets", "Total", "Status"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)

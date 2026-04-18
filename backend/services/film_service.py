@@ -5,12 +5,13 @@ Business logic for films, listings, and showings.
 
 from datetime import date
 from typing import Optional
-from sqlalchemy.orm import Session, joinedload # type: ignore
 
-from backend.models.film import Film, Listing, Showing
-from backend.models.cinema import Screen, Cinema, City
+from sqlalchemy.orm import Session, joinedload  # type: ignore
+
+from backend.core.exceptions import NotFoundError, ValidationError
 from backend.models.booking import BasePrice
-from backend.core.exceptions import NotFoundError, ValidationError, AuthorisationError
+from backend.models.cinema import Cinema, Screen
+from backend.models.film import Film, Listing, Showing
 
 
 # Films
@@ -18,7 +19,7 @@ def get_all_films(db: Session, active_only: bool = True) -> list[Film]:
     """Return all films, optionally filtered to active only."""
     query = db.query(Film)
     if active_only:
-        query = query.filter(Film.is_active == True)  # noqa: E712
+        query = query.filter(Film.is_active)
     return query.order_by(Film.title).all()
 
 
@@ -80,7 +81,7 @@ def get_listings_for_cinema(
     )
 
     if active_only:
-        query = query.filter(Listing.is_active == True, Film.is_active == True)  # noqa: E712
+        query = query.filter(Listing.is_active, Film.is_active)
         query = query.join(Film, Listing.film_id == Film.film_id)
 
     if target_date:
@@ -114,9 +115,8 @@ def get_all_listings(
     )
 
     if active_only:
-        query = (
-            query.join(Film, Listing.film_id == Film.film_id)
-            .filter(Listing.is_active == True, Film.is_active == True)  # noqa: E712
+        query = query.join(Film, Listing.film_id == Film.film_id).filter(
+            Listing.is_active, Film.is_active
         )
 
     if target_date:
@@ -173,7 +173,7 @@ def create_listing(db: Session, data: dict, showings_data: list[dict], created_b
         db.query(Listing)
         .filter(
             Listing.screen_id == data["screen_id"],
-            Listing.is_active == True,  # noqa: E712
+            Listing.is_active,
             Listing.start_date <= end,
             Listing.end_date >= start,
         )
@@ -262,35 +262,39 @@ def get_film_listings_for_display(
             if not bp:
                 continue
 
-            showing_details.append({
-                "showing_id": s.showing_id,
-                "show_time": s.show_time,
-                "show_type": s.show_type,
-                "lower_hall_price": float(bp.lower_hall_price),
-                "upper_gallery_price": bp.upper_gallery_price,
-                "vip_price": bp.vip_price,
-            })
+            showing_details.append(
+                {
+                    "showing_id": s.showing_id,
+                    "show_time": s.show_time,
+                    "show_type": s.show_type,
+                    "lower_hall_price": float(bp.lower_hall_price),
+                    "upper_gallery_price": bp.upper_gallery_price,
+                    "vip_price": bp.vip_price,
+                }
+            )
 
         film = listing.film
-        result.append({
-            "film_id": film.film_id,
-            "title": film.title,
-            "description": film.description,
-            "genre": film.genre,
-            "age_rating": film.age_rating,
-            "duration_mins": film.duration_mins,
-            "duration_display": film.duration_display,
-            "release_date": film.release_date,
-            "imdb_rating": float(film.imdb_rating) if film.imdb_rating else None,
-            "cast_list": film.cast_list,
-            "director": film.director,
-            "poster_url": film.poster_url,
-            "listing_id": listing.listing_id,
-            "screen_id": screen.screen_id,
-            "screen_number": screen.screen_number,
-            "start_date": listing.start_date,
-            "end_date": listing.end_date,
-            "showings": showing_details,
-        })
+        result.append(
+            {
+                "film_id": film.film_id,
+                "title": film.title,
+                "description": film.description,
+                "genre": film.genre,
+                "age_rating": film.age_rating,
+                "duration_mins": film.duration_mins,
+                "duration_display": film.duration_display,
+                "release_date": film.release_date,
+                "imdb_rating": float(film.imdb_rating) if film.imdb_rating else None,
+                "cast_list": film.cast_list,
+                "director": film.director,
+                "poster_url": film.poster_url,
+                "listing_id": listing.listing_id,
+                "screen_id": screen.screen_id,
+                "screen_number": screen.screen_number,
+                "start_date": listing.start_date,
+                "end_date": listing.end_date,
+                "showings": showing_details,
+            }
+        )
 
     return result

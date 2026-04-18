@@ -4,8 +4,9 @@ Synchronous HTTP client for the PyQt6 GUI to talk to the FastAPI backend.
 Wraps httpx and handles JWT token management.
 """
 
-import httpx
 from typing import Optional
+
+import httpx
 
 from config.settings import API_HOST, API_PORT
 
@@ -76,30 +77,22 @@ class ApiClient:
 
     # Generic request helpers
     def get(self, path: str, params: dict = None) -> dict | list:
-        resp = self._client.get(
-            f"{self.base_url}{path}", headers=self._headers(), params=params
-        )
+        resp = self._client.get(f"{self.base_url}{path}", headers=self._headers(), params=params)
         resp.raise_for_status()
         return resp.json()
 
     def post(self, path: str, json: dict = None) -> dict | list:
-        resp = self._client.post(
-            f"{self.base_url}{path}", headers=self._headers(), json=json
-        )
+        resp = self._client.post(f"{self.base_url}{path}", headers=self._headers(), json=json)
         resp.raise_for_status()
         return resp.json()
 
     def patch(self, path: str, json: dict = None) -> dict | list:
-        resp = self._client.patch(
-            f"{self.base_url}{path}", headers=self._headers(), json=json
-        )
+        resp = self._client.patch(f"{self.base_url}{path}", headers=self._headers(), json=json)
         resp.raise_for_status()
         return resp.json()
 
     def delete(self, path: str) -> dict | list:
-        resp = self._client.delete(
-            f"{self.base_url}{path}", headers=self._headers()
-        )
+        resp = self._client.delete(f"{self.base_url}{path}", headers=self._headers())
         resp.raise_for_status()
         return resp.json()
 
@@ -230,6 +223,12 @@ class ApiClient:
 
     def create_user(self, data: dict) -> dict:
         return self.post("/users", data)
+
+    def change_password(self, current_password: str, new_password: str) -> dict:
+        return self.post(
+            "/users/me/change-password",
+            {"current_password": current_password, "new_password": new_password},
+        )
 
 
 # Singleton instance — shared across all windows

@@ -4,28 +4,48 @@ Film Listings — browse films at a cinema for a chosen date.
 Includes genre, rating, and showtime filters.
 """
 
-from datetime import date, timedelta
-from PyQt6.QtCore import Qt, QDate  # type: ignore
+from PyQt6.QtCore import QDate, Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QLabel,
-    QComboBox, QDateEdit, QFrame, QLineEdit,
+    QComboBox,
+    QDateEdit,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, ACCENT_LIGHT, WHITE, GOLD, SUCCESS,
-    BG_DARKEST, BG_CARD, BG_DARK, BG_INPUT, BG_HOVER, BORDER,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    ACCENT,
+    BG_DARK,
+    BG_HOVER,
+    BORDER,
+    GOLD,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    TEXT_MUTED,
+    TEXT_SECONDARY,
+    WHITE,
+    body_font,
+    heading_font,
 )
 from desktop.ui.widgets import (
-    heading_label, subheading_label, muted_label, badge_label,
-    primary_button, secondary_button, Card, separator, show_toast,
+    Card,
+    badge_label,
+    heading_label,
+    muted_label,
+    secondary_button,
+    separator,
+    show_toast,
+    subheading_label,
 )
-from desktop.api_client import api
 
 
 class FilmListingsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._all_listings = []
@@ -76,10 +96,19 @@ class FilmListingsView(QWidget):
         filter_row.addWidget(lbl3)
         self.genre_filter = QComboBox()
         self.genre_filter.addItem("All Genres")
-        self.genre_filter.addItems([
-            "Action", "Comedy", "Drama", "Horror", "Sci-Fi",
-            "Romance", "Thriller", "Animation", "Documentary",
-        ])
+        self.genre_filter.addItems(
+            [
+                "Action",
+                "Comedy",
+                "Drama",
+                "Horror",
+                "Sci-Fi",
+                "Romance",
+                "Thriller",
+                "Animation",
+                "Documentary",
+            ]
+        )
         self.genre_filter.setFixedWidth(150)
         self.genre_filter.currentIndexChanged.connect(self._apply_filters)
         filter_row.addWidget(self.genre_filter)
@@ -146,8 +175,12 @@ class FilmListingsView(QWidget):
             self.cinema_combo.blockSignals(True)
             self.cinema_combo.clear()
             for c in cinemas:
-                label = f"{c['cinema_name']} ({c['city_name']})" if c.get('city_name') else c['cinema_name']
-                self.cinema_combo.addItem(label, c['cinema_id'])
+                label = (
+                    f"{c['cinema_name']} ({c['city_name']})"
+                    if c.get("city_name")
+                    else c["cinema_name"]
+                )
+                self.cinema_combo.addItem(label, c["cinema_id"])
 
             for i in range(self.cinema_combo.count()):
                 if self.cinema_combo.itemData(i) == api.cinema_id:
@@ -205,7 +238,8 @@ class FilmListingsView(QWidget):
         if showtime != "All Times":
             st = showtime.lower()
             filtered = [
-                f for f in filtered
+                f
+                for f in filtered
                 if any(s.get("show_type", "") == st for s in f.get("showings", []))
             ]
 
@@ -270,7 +304,9 @@ class FilmListingsView(QWidget):
         if data.get("description"):
             desc = QLabel(data["description"])
             desc.setFont(body_font(10))
-            desc.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; margin-top: 4px;")
+            desc.setStyleSheet(
+                f"color: {TEXT_SECONDARY}; background: transparent; margin-top: 4px;"
+            )
             desc.setWordWrap(True)
             card.add(desc)
 
@@ -288,7 +324,9 @@ class FilmListingsView(QWidget):
 
         show_label = QLabel("Showings:")
         show_label.setFont(body_font(10))
-        show_label.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 600;")
+        show_label.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 600;"
+        )
         showings_row.addWidget(show_label)
 
         for s in data.get("showings", []):
@@ -320,7 +358,9 @@ class FilmListingsView(QWidget):
             price_lbl = QLabel(f"from \u00a3{s['lower_hall_price']:.2f}")
             price_lbl.setFont(body_font(9))
             price_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            price_lbl.setStyleSheet(f"color: {ACCENT}; background: transparent; font-weight: 600; border: none;")
+            price_lbl.setStyleSheet(
+                f"color: {ACCENT}; background: transparent; font-weight: 600; border: none;"
+            )
             sw_layout.addWidget(price_lbl)
 
             showings_row.addWidget(show_widget)

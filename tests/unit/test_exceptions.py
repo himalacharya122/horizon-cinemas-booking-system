@@ -13,13 +13,16 @@ Test cases:
 """
 
 from backend.core.exceptions import (
-    HCBSException, AuthenticationError, AuthorisationError,
-    NotFoundError, BookingError, ValidationError,
+    AuthenticationError,
+    AuthorisationError,
+    BookingError,
+    HCBSException,
+    NotFoundError,
+    ValidationError,
 )
 
 
 class TestExceptions:
-
     def test_base_exception(self):
         """TC-EXC-01"""
         exc = HCBSException("Something broke", 500)

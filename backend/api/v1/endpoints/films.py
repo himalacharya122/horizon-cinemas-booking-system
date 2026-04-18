@@ -6,17 +6,20 @@ Film catalogue CRUD and enriched film listing view for the GUI.
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session # type: ignore
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session  # type: ignore
 
+from backend.api.deps import get_current_user, require_role
 from backend.core.database import get_db
 from backend.core.exceptions import HCBSException
-from backend.api.deps import get_current_user, require_role
-
 from backend.schemas.film import (
-    FilmOut, FilmCreate, FilmUpdate,
-    ListingOut, ListingCreate, ListingUpdate,
+    FilmCreate,
     FilmListingItem,
+    FilmOut,
+    FilmUpdate,
+    ListingCreate,
+    ListingOut,
+    ListingUpdate,
 )
 from backend.services import film_service
 
@@ -135,8 +138,12 @@ def create_listing(
         showings_data = [s.model_dump() for s in body.showings]
         listing = film_service.create_listing(
             db,
-            data={"film_id": body.film_id, "screen_id": body.screen_id,
-                  "start_date": body.start_date, "end_date": body.end_date},
+            data={
+                "film_id": body.film_id,
+                "screen_id": body.screen_id,
+                "start_date": body.start_date,
+                "end_date": body.end_date,
+            },
             showings_data=showings_data,
             created_by=int(user["sub"]),
         )
@@ -222,4 +229,4 @@ def _serialise_listing(listing) -> dict:
 
 
 def _serialise_listings(listings) -> list[dict]:
-    return [_serialise_listing(l) for l in listings]
+    return [_serialise_listing(listing) for listing in listings]

@@ -5,13 +5,13 @@ User management endpoints for admin: list staff, reset passwords, activity logs.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
+from backend.api.deps import get_current_user, require_role
 from backend.core.database import get_db
 from backend.core.exceptions import HCBSException
-from backend.api.deps import require_role
 from backend.services import user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -24,6 +24,11 @@ class CreateUserRequest(BaseModel):
     email: str
     role: str  # booking_staff, admin, manager
     cinema_id: int
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 
 @router.post("", status_code=201)
@@ -57,6 +62,24 @@ def list_users(
 ):
     """List all users, optionally filtered by cinema or role. (Admin/Manager)"""
     return user_service.get_all_users(db, cinema_id, role, active_only)
+
+
+@router.post("/me/change-password")
+def change_my_password(
+    body: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Change the current user's password."""
+    try:
+        return user_service.change_my_password(
+            db,
+            user_id=user["user_id"],
+            current_password=body.current_password,
+            new_password=body.new_password,
+        )
+    except HCBSException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 @router.post("/{user_id}/reset-password")

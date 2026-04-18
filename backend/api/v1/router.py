@@ -6,9 +6,9 @@ Collects all v1 endpoint routers under the /api/v1 prefix.
 from fastapi import APIRouter
 
 from backend.api.v1.endpoints.auth import router as auth_router
-from backend.api.v1.endpoints.films import router as films_router
 from backend.api.v1.endpoints.bookings import router as bookings_router
 from backend.api.v1.endpoints.cinemas import router as cinemas_router
+from backend.api.v1.endpoints.films import router as films_router
 from backend.api.v1.endpoints.reports import router as reports_router
 from backend.api.v1.endpoints.users import router as users_router
 

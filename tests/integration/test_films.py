@@ -19,11 +19,10 @@ Test cases:
 
 from datetime import date, timedelta
 
-from tests.conftest import auth_header # type: ignore
+from tests.conftest import auth_header  # type: ignore
 
 
 class TestFilmEndpoints:
-
     def test_list_films(self, seeded_client, staff_token):
         """TC-FLM-01"""
         client, _ = seeded_client
@@ -37,13 +36,17 @@ class TestFilmEndpoints:
     def test_create_film(self, seeded_client, admin_token):
         """TC-FLM-02"""
         client, _ = seeded_client
-        resp = client.post("/api/v1/films", json={
-            "title": "Test New Film",
-            "genre": "Thriller",
-            "age_rating": "15",
-            "duration_mins": 155,
-            "director": "Test Director",
-        }, headers=auth_header(admin_token))
+        resp = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Test New Film",
+                "genre": "Thriller",
+                "age_rating": "15",
+                "duration_mins": 155,
+                "director": "Test Director",
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 201
         assert resp.json()["title"] == "Test New Film"
         assert resp.json()["is_active"] is True
@@ -52,9 +55,13 @@ class TestFilmEndpoints:
         """TC-FLM-03"""
         client, seed = seeded_client
         film_id = seed["film"].film_id
-        resp = client.patch(f"/api/v1/films/{film_id}", json={
-            "title": "Top Gun: Maverick (IMAX)",
-        }, headers=auth_header(admin_token))
+        resp = client.patch(
+            f"/api/v1/films/{film_id}",
+            json={
+                "title": "Top Gun: Maverick (IMAX)",
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 200
         assert resp.json()["title"] == "Top Gun: Maverick (IMAX)"
 
@@ -62,10 +69,16 @@ class TestFilmEndpoints:
         """TC-FLM-04"""
         client, _ = seeded_client
         # Create a film to delete
-        create = client.post("/api/v1/films", json={
-            "title": "Doomed Film", "genre": "Horror",
-            "age_rating": "18", "duration_mins": 90,
-        }, headers=auth_header(admin_token))
+        create = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Doomed Film",
+                "genre": "Horror",
+                "age_rating": "18",
+                "duration_mins": 90,
+            },
+            headers=auth_header(admin_token),
+        )
         fid = create.json()["film_id"]
 
         resp = client.delete(f"/api/v1/films/{fid}", headers=auth_header(admin_token))
@@ -88,28 +101,37 @@ class TestFilmEndpoints:
 
 
 class TestListingEndpoints:
-
     def test_create_listing_with_showings(self, seeded_client, admin_token):
         """TC-FLM-07"""
         client, seed = seeded_client
         # Create a new film first
-        film_resp = client.post("/api/v1/films", json={
-            "title": "Listing Test Film", "genre": "Drama",
-            "age_rating": "PG", "duration_mins": 100,
-        }, headers=auth_header(admin_token))
+        film_resp = client.post(
+            "/api/v1/films",
+            json={
+                "title": "Listing Test Film",
+                "genre": "Drama",
+                "age_rating": "PG",
+                "duration_mins": 100,
+            },
+            headers=auth_header(admin_token),
+        )
         film_id = film_resp.json()["film_id"]
         screen_id = seed["screens"]["london"].screen_id
 
-        resp = client.post("/api/v1/films/listings", json={
-            "film_id": film_id,
-            "screen_id": screen_id,
-            "start_date": date.today().isoformat(),
-            "end_date": (date.today() + timedelta(days=7)).isoformat(),
-            "showings": [
-                {"show_time": "10:00:00", "show_type": "morning"},
-                {"show_time": "19:00:00", "show_type": "evening"},
-            ],
-        }, headers=auth_header(admin_token))
+        resp = client.post(
+            "/api/v1/films/listings",
+            json={
+                "film_id": film_id,
+                "screen_id": screen_id,
+                "start_date": date.today().isoformat(),
+                "end_date": (date.today() + timedelta(days=7)).isoformat(),
+                "showings": [
+                    {"show_time": "10:00:00", "show_type": "morning"},
+                    {"show_time": "19:00:00", "show_type": "evening"},
+                ],
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["film_title"] == "Listing Test Film"
@@ -120,13 +142,17 @@ class TestListingEndpoints:
         client, seed = seeded_client
         screen_id = seed["screens"]["bristol"].screen_id  # already has a listing
 
-        resp = client.post("/api/v1/films/listings", json={
-            "film_id": seed["film"].film_id,
-            "screen_id": screen_id,
-            "start_date": (date.today() + timedelta(days=1)).isoformat(),
-            "end_date": (date.today() + timedelta(days=10)).isoformat(),
-            "showings": [{"show_time": "15:00:00", "show_type": "afternoon"}],
-        }, headers=auth_header(admin_token))
+        resp = client.post(
+            "/api/v1/films/listings",
+            json={
+                "film_id": seed["film"].film_id,
+                "screen_id": screen_id,
+                "start_date": (date.today() + timedelta(days=1)).isoformat(),
+                "end_date": (date.today() + timedelta(days=10)).isoformat(),
+                "showings": [{"show_time": "15:00:00", "show_type": "afternoon"}],
+            },
+            headers=auth_header(admin_token),
+        )
         assert resp.status_code == 400
         assert "overlap" in resp.json()["detail"].lower()
 

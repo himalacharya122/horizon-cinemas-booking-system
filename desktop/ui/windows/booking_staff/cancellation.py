@@ -3,27 +3,39 @@ desktop/ui/windows/booking_staff/cancellation.py
 Cancel a booking by reference. Shows booking details before confirming.
 """
 
-from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QScrollArea,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, DANGER, SUCCESS, WHITE,
-    BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_MD, SPACING_LG,
+    DANGER,
+    SPACING_LG,
+    SPACING_MD,
+    TEXT_SECONDARY,
+    body_font,
 )
 from desktop.ui.widgets import (
-    heading_label, subheading_label, muted_label, primary_button,
-    danger_button, secondary_button, Card, separator,
-    labelled_value, status_badge, show_toast, confirm_dialog,
+    Card,
+    confirm_dialog,
+    danger_button,
     error_dialog,
+    heading_label,
+    labelled_value,
+    primary_button,
+    separator,
+    show_toast,
+    status_badge,
+    subheading_label,
 )
-from desktop.api_client import api
 
 
 class CancellationView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._booking = None
@@ -158,7 +170,9 @@ class CancellationView(QWidget):
                 f"Cancellation fee: \u00a3{fee:.2f} (50%)   |   Refund: \u00a3{refund:.2f}"
             )
             warn.setFont(body_font(10))
-            warn.setStyleSheet(f"color: {DANGER}; background: transparent; font-weight: 500; padding: 4px;")
+            warn.setStyleSheet(
+                f"color: {DANGER}; background: transparent; font-weight: 500; padding: 4px;"
+            )
             self.details_card.add(warn)
 
             cancel_btn = danger_button("Cancel This Booking")
@@ -176,7 +190,7 @@ class CancellationView(QWidget):
             self,
             "Confirm Cancellation",
             f"Are you sure you want to cancel booking {ref}?\n\n"
-            f"A 50% cancellation fee will be charged."
+            f"A 50% cancellation fee will be charged.",
         )
         if not ok:
             return
@@ -205,6 +219,10 @@ class CancellationView(QWidget):
         self.result_card.add(separator())
         self.result_card.add_layout(labelled_value("Reference", result["booking_reference"]))
         self.result_card.add_layout(labelled_value("Status", result["booking_status"].capitalize()))
-        self.result_card.add_layout(labelled_value("Fee Charged", f"\u00a3{result['cancellation_fee']:.2f}"))
-        self.result_card.add_layout(labelled_value("Refund", f"\u00a3{result['refund_amount']:.2f}"))
+        self.result_card.add_layout(
+            labelled_value("Fee Charged", f"\u00a3{result['cancellation_fee']:.2f}")
+        )
+        self.result_card.add_layout(
+            labelled_value("Refund", f"\u00a3{result['refund_amount']:.2f}")
+        )
         self.result_card.show()

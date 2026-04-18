@@ -3,22 +3,38 @@ desktop/ui/windows/login_window.py
 Login screen — dark cinema theme, centred card with username/password.
 """
 
-from PyQt6.QtCore import Qt, QSize  # type: ignore
+from PyQt6.QtCore import QSize, Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFrame,
+    QFrame,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from desktop.ui.theme import (
-    ACCENT, ACCENT_HOVER, WHITE,
-    BG_DARKEST, BG_CARD, BG_INPUT, BORDER,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_MD, SPACING_LG, SPACING_XL,
-)
 from desktop.api_client import api
+from desktop.ui.theme import (
+    ACCENT,
+    ACCENT_HOVER,
+    BG_CARD,
+    BG_DARKEST,
+    BG_INPUT,
+    BORDER,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_XL,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    WHITE,
+    body_font,
+    heading_font,
+)
+from desktop.ui.windows.dev_skip_login import add_dev_skip_button
 
 
 class LoginWindow(QWidget):
-
     def __init__(self, on_login_success: callable):
         super().__init__()
         self.on_login_success = on_login_success
@@ -51,8 +67,7 @@ class LoginWindow(QWidget):
         card = QFrame()
         card.setFixedWidth(400)
         card.setStyleSheet(
-            f"QFrame {{ background: {BG_CARD}; border: 1px solid {BORDER}; "
-            f"border-radius: 10px; }}"
+            f"QFrame {{ background: {BG_CARD}; border: 1px solid {BORDER}; border-radius: 10px; }}"
         )
         cl = QVBoxLayout(card)
         cl.setContentsMargins(32, 32, 32, 32)
@@ -60,18 +75,24 @@ class LoginWindow(QWidget):
 
         title = QLabel("Staff Login")
         title.setFont(heading_font(16))
-        title.setStyleSheet(f"color: {WHITE}; background: transparent; border: none; margin-bottom: 8px;")
+        title.setStyleSheet(
+            f"color: {WHITE}; background: transparent; border: none; margin-bottom: 8px;"
+        )
         cl.addWidget(title)
 
         subtitle = QLabel("Sign in to access the booking system")
         subtitle.setFont(body_font(10))
-        subtitle.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; border: none; margin-bottom: 16px;")
+        subtitle.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; border: none; margin-bottom: 16px;"
+        )
         cl.addWidget(subtitle)
 
         # Username
         user_lbl = QLabel("Username")
         user_lbl.setFont(body_font(10))
-        user_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500; border: none;")
+        user_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500; border: none;"
+        )
         cl.addWidget(user_lbl)
 
         self.username_input = QLineEdit()
@@ -84,7 +105,9 @@ class LoginWindow(QWidget):
         # Password
         pass_lbl = QLabel("Password")
         pass_lbl.setFont(body_font(10))
-        pass_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500; border: none;")
+        pass_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-weight: 500; border: none;"
+        )
         cl.addWidget(pass_lbl)
 
         self.password_input = QLineEdit()
@@ -119,6 +142,11 @@ class LoginWindow(QWidget):
         )
         self.login_btn.clicked.connect(self._do_login)
         cl.addWidget(self.login_btn)
+
+        cl.addSpacing(SPACING_MD)
+
+        # DEV ONLY: Skip login. Commment out or remove for production.
+        add_dev_skip_button(cl, self.on_login_success)
 
         outer.addWidget(card, alignment=Qt.AlignmentFlag.AlignCenter)
 

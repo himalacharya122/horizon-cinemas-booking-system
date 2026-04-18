@@ -4,26 +4,38 @@ View bookings made by the current staff member today.
 """
 
 from datetime import date
-from PyQt6.QtCore import Qt  # type: ignore
+
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QTableWidget, QTableWidgetItem, QHeaderView,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, WHITE,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_MD, SPACING_LG,
+    SPACING_LG,
+    SPACING_MD,
+    TEXT_MUTED,
+    TEXT_SECONDARY,
+    WHITE,
+    body_font,
+    heading_font,
 )
 from desktop.ui.widgets import (
-    heading_label, muted_label, primary_button, secondary_button,
-    separator, show_toast, error_dialog, Card, badge_label,
+    Card,
+    error_dialog,
+    heading_label,
+    muted_label,
+    secondary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class MyBookingsTodayView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -70,10 +82,9 @@ class MyBookingsTodayView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "Reference", "Film", "Show Date", "Time",
-            "Customer", "Tickets", "Total", "Status"
-        ])
+        self.table.setHorizontalHeaderLabels(
+            ["Reference", "Film", "Show Date", "Time", "Customer", "Tickets", "Total", "Status"]
+        )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, 1)
@@ -91,7 +102,7 @@ class MyBookingsTodayView(QWidget):
         t.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
         card.add(t)
 
-        self._stat_labels = getattr(self, '_stat_labels', {})
+        self._stat_labels = getattr(self, "_stat_labels", {})
         v = QLabel(value)
         v.setFont(heading_font(18))
         v.setStyleSheet(f"color: {WHITE}; background: transparent;")

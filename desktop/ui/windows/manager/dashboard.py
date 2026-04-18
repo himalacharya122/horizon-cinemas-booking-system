@@ -4,25 +4,42 @@ Manager dashboard: cross-cinema overview with key stats.
 """
 
 from datetime import date
+
 from PyQt6.QtCore import Qt  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout, QScrollArea,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
+from desktop.api_client import api
 from desktop.ui.theme import (
-    ACCENT, SUCCESS, DANGER, GOLD,
-    BG_CARD, BG_DARKEST, BORDER,
-    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    ACCENT,
+    DANGER,
+    GOLD,
+    SPACING_LG,
+    SPACING_MD,
+    SPACING_SM,
+    SUCCESS,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    body_font,
+    heading_font,
 )
 from desktop.ui.widgets import (
-    heading_label, primary_button, separator, error_dialog, Card,
+    Card,
+    error_dialog,
+    heading_label,
+    primary_button,
+    separator,
 )
-from desktop.api_client import api
 
 
 class DashboardView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()

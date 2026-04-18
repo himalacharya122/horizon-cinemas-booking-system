@@ -4,7 +4,7 @@ POST /api/v1/auth/login
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session # type: ignore
+from sqlalchemy.orm import Session  # type: ignore
 
 from backend.core.database import get_db
 from backend.core.exceptions import AuthenticationError
@@ -27,4 +27,5 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         return result
     except AuthenticationError as exc:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=exc.status_code, detail=exc.message)

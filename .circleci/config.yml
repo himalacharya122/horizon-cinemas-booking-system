@@ -1,0 +1,49 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1.1
+
+jobs:
+  lint:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          args: ruff bandit
+      - run:
+          name: Run Ruff Lint
+          command: ruff check .
+      - run:
+          name: Run Ruff Format Check
+          command: ruff format --check .
+      - run:
+          name: Run Bandit Security Scan
+          command: bandit -r . -x ./venv,./tests -ll
+
+  test:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements.txt
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-dev.txt
+      - run:
+          name: Run Pytest
+          command: pytest
+          environment:
+            JWT_SECRET_KEY: "ci-test-secret"
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - lint
+      - test:
+          requires:
+            - lint

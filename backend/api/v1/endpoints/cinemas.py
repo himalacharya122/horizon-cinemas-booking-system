@@ -1,6 +1,6 @@
 """
 backend/api/v1/endpoints/cinemas.py
-───────────────────────────────────
+
 Cinema, screen, city, and base price management.
 
 IMPORTANT: Static path segments (/cities, /prices) are registered BEFORE
@@ -8,24 +8,29 @@ parameterised ones (/{cinema_id}) so FastAPI matches them correctly.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session # type: ignore
+from sqlalchemy.orm import Session  # type: ignore
 
+from backend.api.deps import get_current_user, require_role
 from backend.core.database import get_db
 from backend.core.exceptions import HCBSException
-from backend.api.deps import get_current_user, require_role
-
 from backend.schemas.cinema import (
-    CityOut, CityCreate,
-    CinemaOut, CinemaCreate, CinemaUpdate,
-    ScreenOut, ScreenCreate,
-    BasePriceOut, BasePriceCreate,
+    BasePriceCreate,
+    BasePriceOut,
+    CinemaCreate,
+    CinemaOut,
+    CinemaUpdate,
+    CityCreate,
+    CityOut,
+    ScreenCreate,
+    ScreenOut,
 )
 from backend.services import cinema_service
 
 router = APIRouter(prefix="/cinemas", tags=["Cinemas"])
 
 
-# ─── Cities (static path — before /{cinema_id}) ───
+# Cities (static path — before /{cinema_id})
+
 
 @router.get("/cities", response_model=list[CityOut])
 def list_cities(
@@ -48,7 +53,8 @@ def create_city(
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
-# ─── Base prices (static path — before /{cinema_id}) ───
+# Base prices (static path — before /{cinema_id})
+
 
 @router.get("/prices", response_model=list[BasePriceOut])
 def list_prices(
@@ -77,7 +83,9 @@ def set_price(
 ):
     """Set or update a base price for a city + time period. (Admin/Manager)"""
     try:
-        bp = cinema_service.set_base_price(db, body.city_id, body.show_period, body.lower_hall_price)
+        bp = cinema_service.set_base_price(
+            db, body.city_id, body.show_period, body.lower_hall_price
+        )
         return {
             "city_id": bp.city_id,
             "show_period": bp.show_period,
@@ -89,7 +97,8 @@ def set_price(
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
-# ─── Cinemas (list + create — no path param) ───
+# Cinemas (list + create — no path param)
+
 
 @router.get("", response_model=list[CinemaOut])
 def list_cinemas(
@@ -120,7 +129,8 @@ def create_cinema(
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
-# ─── Single cinema by ID (parameterised — AFTER static routes) ───
+# Single cinema by ID (parameterised — AFTER static routes)
+
 
 @router.get("/{cinema_id}", response_model=CinemaOut)
 def get_cinema(
@@ -149,7 +159,8 @@ def update_cinema(
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
-# ─── Screens ───
+# Screens
+
 
 @router.post("/{cinema_id}/screens", response_model=ScreenOut, status_code=201)
 def add_screen(
@@ -165,7 +176,8 @@ def add_screen(
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
-# ─── Helpers ───
+# Helpers
+
 
 def _serialise_cinema(cinema) -> dict:
     return {

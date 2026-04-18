@@ -3,14 +3,14 @@ backend/services/report_service.py
 Admin report queries: revenue, top films, staff booking counts, etc.
 """
 
-from datetime import date
 from typing import Optional
-from sqlalchemy import func, desc # type: ignore
-from sqlalchemy.orm import Session # type: ignore
 
-from backend.models.booking import Booking, BookedSeat
-from backend.models.film import Showing, Listing, Film
-from backend.models.cinema import Screen, Cinema, City, Seat
+from sqlalchemy import case, desc, extract, func  # type: ignore
+from sqlalchemy.orm import Session  # type: ignore
+
+from backend.models.booking import Booking
+from backend.models.cinema import Cinema, City, Screen
+from backend.models.film import Film, Listing, Showing
 from backend.models.user import User
 
 
@@ -24,9 +24,9 @@ def monthly_revenue_by_cinema(
             Cinema.cinema_name,
             func.count(Booking.booking_id).label("total_bookings"),
             func.coalesce(func.sum(Booking.total_cost), 0).label("total_revenue"),
-            func.sum(
-                func.IF(Booking.booking_status == "cancelled", 1, 0)
-            ).label("cancellations"),
+            func.sum(case((Booking.booking_status == "cancelled", 1), else_=0)).label(
+                "cancellations"
+            ),
             func.coalesce(func.sum(Booking.cancellation_fee), 0).label("cancellation_fees"),
         )
         .join(Showing, Booking.showing_id == Showing.showing_id)
@@ -35,19 +35,15 @@ def monthly_revenue_by_cinema(
         .join(Cinema, Screen.cinema_id == Cinema.cinema_id)
         .join(City, Cinema.city_id == City.city_id)
         .filter(
-            func.year(Booking.booking_date) == year,
-            func.month(Booking.booking_date) == month,
+            extract("year", Booking.booking_date) == year,
+            extract("month", Booking.booking_date) == month,
         )
     )
 
     if cinema_id:
         query = query.filter(Cinema.cinema_id == cinema_id)
 
-    rows = (
-        query.group_by(City.city_name, Cinema.cinema_name)
-        .order_by(desc("total_revenue"))
-        .all()
-    )
+    rows = query.group_by(City.city_name, Cinema.cinema_name).order_by(desc("total_revenue")).all()
 
     return [
         {
@@ -62,9 +58,7 @@ def monthly_revenue_by_cinema(
     ]
 
 
-def bookings_per_listing(
-    db: Session, cinema_id: Optional[int] = None
-) -> list[dict]:
+def bookings_per_listing(db: Session, cinema_id: Optional[int] = None) -> list[dict]:
     """Number of confirmed bookings per active listing."""
     query = (
         db.query(
@@ -89,8 +83,11 @@ def bookings_per_listing(
 
     rows = (
         query.group_by(
-            Film.title, Screen.screen_number, Cinema.cinema_name,
-            Listing.start_date, Listing.end_date,
+            Film.title,
+            Screen.screen_number,
+            Cinema.cinema_name,
+            Listing.start_date,
+            Listing.end_date,
         )
         .order_by(desc("booking_count"))
         .all()
@@ -110,9 +107,7 @@ def bookings_per_listing(
     ]
 
 
-def top_revenue_films(
-    db: Session, year: int, month: int, limit: int = 10
-) -> list[dict]:
+def top_revenue_films(db: Session, year: int, month: int, limit: int = 10) -> list[dict]:
     """Top revenue-generating films for a given month."""
     rows = (
         db.query(
@@ -125,8 +120,8 @@ def top_revenue_films(
         .join(Film, Listing.film_id == Film.film_id)
         .filter(
             Booking.booking_status == "confirmed",
-            func.year(Booking.booking_date) == year,
-            func.month(Booking.booking_date) == month,
+            extract("year", Booking.booking_date) == year,
+            extract("month", Booking.booking_date) == month,
         )
         .group_by(Film.title)
         .order_by(desc("revenue"))
@@ -135,8 +130,7 @@ def top_revenue_films(
     )
 
     return [
-        {"film_title": r.title, "revenue": float(r.revenue), "bookings": r.bookings}
-        for r in rows
+        {"film_title": r.title, "revenue": float(r.revenue), "bookings": r.bookings} for r in rows
     ]
 
 
@@ -157,8 +151,8 @@ def staff_booking_report(
         .join(User, Booking.booked_by == User.user_id)
         .join(Cinema, User.cinema_id == Cinema.cinema_id)
         .filter(
-            func.year(Booking.booking_date) == year,
-            func.month(Booking.booking_date) == month,
+            extract("year", Booking.booking_date) == year,
+            extract("month", Booking.booking_date) == month,
         )
     )
 
@@ -167,8 +161,11 @@ def staff_booking_report(
 
     rows = (
         query.group_by(
-            User.user_id, User.username, User.first_name,
-            User.last_name, Cinema.cinema_name,
+            User.user_id,
+            User.username,
+            User.first_name,
+            User.last_name,
+            Cinema.cinema_name,
         )
         .order_by(desc("total_bookings"))
         .all()
@@ -209,8 +206,8 @@ def occupancy_report(
         .join(Cinema, Screen.cinema_id == Cinema.cinema_id)
         .filter(
             Booking.booking_status == "confirmed",
-            func.year(Booking.booking_date) == year,
-            func.month(Booking.booking_date) == month,
+            extract("year", Booking.booking_date) == year,
+            extract("month", Booking.booking_date) == month,
         )
     )
 
@@ -219,7 +216,9 @@ def occupancy_report(
 
     rows = (
         query.group_by(
-            Cinema.cinema_name, Screen.screen_number, Screen.total_seats,
+            Cinema.cinema_name,
+            Screen.screen_number,
+            Screen.total_seats,
         )
         .order_by(Cinema.cinema_name, Screen.screen_number)
         .all()
@@ -232,15 +231,19 @@ def occupancy_report(
         bookings = r.total_bookings
         # Approximate occupancy: tickets sold / (capacity * number of bookings)
         # Simpler: just show raw numbers and a percentage if capacity known
-        occ_pct = round((tickets / (total_capacity * max(bookings, 1))) * 100, 1) if total_capacity else 0
-        results.append({
-            "cinema_name": r.cinema_name,
-            "screen_number": r.screen_number,
-            "total_seats": r.total_seats,
-            "total_bookings": bookings,
-            "tickets_sold": tickets,
-            "occupancy_pct": min(occ_pct, 100.0),
-        })
+        occ_pct = (
+            round((tickets / (total_capacity * max(bookings, 1))) * 100, 1) if total_capacity else 0
+        )
+        results.append(
+            {
+                "cinema_name": r.cinema_name,
+                "screen_number": r.screen_number,
+                "total_seats": r.total_seats,
+                "total_bookings": bookings,
+                "tickets_sold": tickets,
+                "occupancy_pct": min(occ_pct, 100.0),
+            }
+        )
 
     return results
 
@@ -256,18 +259,24 @@ def cancellation_rate_report(
         db.query(
             Cinema.cinema_name,
             func.count(Booking.booking_id).label("total_bookings"),
-            func.sum(
-                func.IF(Booking.booking_status == "cancelled", 1, 0)
-            ).label("cancelled"),
+            func.sum(case((Booking.booking_status == "cancelled", 1), else_=0)).label("cancelled"),
             func.coalesce(
                 func.sum(
-                    func.IF(Booking.booking_status == "cancelled", Booking.cancellation_fee, 0)
-                ), 0
+                    case(
+                        (Booking.booking_status == "cancelled", Booking.cancellation_fee),
+                        else_=0,
+                    )
+                ),
+                0,
             ).label("fees_collected"),
             func.coalesce(
                 func.sum(
-                    func.IF(Booking.booking_status == "cancelled", Booking.refund_amount, 0)
-                ), 0
+                    case(
+                        (Booking.booking_status == "cancelled", Booking.refund_amount),
+                        else_=0,
+                    )
+                ),
+                0,
             ).label("total_refunded"),
         )
         .join(Showing, Booking.showing_id == Showing.showing_id)
@@ -275,28 +284,24 @@ def cancellation_rate_report(
         .join(Screen, Listing.screen_id == Screen.screen_id)
         .join(Cinema, Screen.cinema_id == Cinema.cinema_id)
         .filter(
-            func.year(Booking.booking_date) == year,
-            func.month(Booking.booking_date) == month,
+            extract("year", Booking.booking_date) == year,
+            extract("month", Booking.booking_date) == month,
         )
     )
 
     if cinema_id:
         query = query.filter(Cinema.cinema_id == cinema_id)
 
-    rows = (
-        query.group_by(Cinema.cinema_name)
-        .order_by(desc("cancelled"))
-        .all()
-    )
+    rows = query.group_by(Cinema.cinema_name).order_by(desc("cancelled")).all()
 
     return [
         {
             "cinema_name": r.cinema_name,
             "total_bookings": r.total_bookings,
             "cancelled": int(r.cancelled),
-            "cancellation_rate": round(
-                (int(r.cancelled) / r.total_bookings * 100), 1
-            ) if r.total_bookings > 0 else 0.0,
+            "cancellation_rate": round((int(r.cancelled) / r.total_bookings * 100), 1)
+            if r.total_bookings > 0
+            else 0.0,
             "fees_collected": float(r.fees_collected),
             "total_refunded": float(r.total_refunded),
         }

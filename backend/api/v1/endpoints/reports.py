@@ -5,11 +5,11 @@ Admin report endpoints: revenue, bookings per listing, top films, staff stats.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session # type: ignore
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session  # type: ignore
 
-from backend.core.database import get_db
 from backend.api.deps import require_role
+from backend.core.database import get_db
 from backend.services import report_service
 
 router = APIRouter(prefix="/reports", tags=["Reports"])

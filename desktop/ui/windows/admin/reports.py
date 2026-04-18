@@ -7,24 +7,33 @@ staff leaderboard, occupancy, cancellation rates + CSV export.
 import csv
 import io
 from datetime import date
-from PyQt6.QtCore import Qt  # type: ignore
+
 from PyQt6.QtWidgets import (  # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QTableWidget,
-    QTableWidgetItem, QHeaderView, QComboBox, QSpinBox, QLabel,
-    QApplication, QFileDialog,
+    QApplication,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
-from desktop.ui.theme import SPACING_MD, SPACING_LG, ACCENT, TEXT_MUTED, TEXT_SECONDARY
-from desktop.ui.widgets import (
-    heading_label, primary_button, secondary_button, separator,
-    error_dialog, show_toast, muted_label,
-)
-from desktop.ui.theme import body_font
 from desktop.api_client import api
+from desktop.ui.theme import SPACING_LG, SPACING_MD, TEXT_SECONDARY
+from desktop.ui.widgets import (
+    error_dialog,
+    heading_label,
+    primary_button,
+    secondary_button,
+    separator,
+    show_toast,
+)
 
 
 class ReportsView(QWidget):
-
     def __init__(self):
         super().__init__()
         self._build_ui()
@@ -89,9 +98,7 @@ class ReportsView(QWidget):
         self.top_table = self._make_table(["Film", "Revenue", "Bookings"])
         self.tabs.addTab(self.top_table, "Top Films")
 
-        self.staff_table = self._make_table(
-            ["Staff", "Username", "Cinema", "Bookings", "Revenue"]
-        )
+        self.staff_table = self._make_table(["Staff", "Username", "Cinema", "Bookings", "Revenue"])
         self.tabs.addTab(self.staff_table, "Staff Bookings")
 
         self.occ_table = self._make_table(
@@ -128,54 +135,95 @@ class ReportsView(QWidget):
         try:
             # Revenue
             data = api.report_revenue(y, m)
-            self._fill_table(self.rev_table, [
-                [d["city_name"], d["cinema_name"], d["total_bookings"],
-                 f"\u00a3{d['total_revenue']:.2f}", d["cancellations"],
-                 f"\u00a3{d['cancellation_fees']:.2f}"]
-                for d in data
-            ])
+            self._fill_table(
+                self.rev_table,
+                [
+                    [
+                        d["city_name"],
+                        d["cinema_name"],
+                        d["total_bookings"],
+                        f"\u00a3{d['total_revenue']:.2f}",
+                        d["cancellations"],
+                        f"\u00a3{d['cancellation_fees']:.2f}",
+                    ]
+                    for d in data
+                ],
+            )
 
             # Bookings per listing
             data = api.report_bookings_per_listing()
-            self._fill_table(self.listing_table, [
-                [d["film_title"], d["screen_number"], d["cinema_name"],
-                 d["start_date"], d["end_date"], d["booking_count"], d["tickets_sold"]]
-                for d in data
-            ])
+            self._fill_table(
+                self.listing_table,
+                [
+                    [
+                        d["film_title"],
+                        d["screen_number"],
+                        d["cinema_name"],
+                        d["start_date"],
+                        d["end_date"],
+                        d["booking_count"],
+                        d["tickets_sold"],
+                    ]
+                    for d in data
+                ],
+            )
 
             # Top films
             data = api.report_top_films(y, m)
-            self._fill_table(self.top_table, [
-                [d["film_title"], f"\u00a3{d['revenue']:.2f}", d["bookings"]]
-                for d in data
-            ])
+            self._fill_table(
+                self.top_table,
+                [[d["film_title"], f"\u00a3{d['revenue']:.2f}", d["bookings"]] for d in data],
+            )
 
             # Staff
             data = api.report_staff_bookings(y, m)
-            self._fill_table(self.staff_table, [
-                [d["staff_name"], d["username"], d["cinema_name"],
-                 d["total_bookings"], f"\u00a3{d['total_revenue']:.2f}"]
-                for d in data
-            ])
+            self._fill_table(
+                self.staff_table,
+                [
+                    [
+                        d["staff_name"],
+                        d["username"],
+                        d["cinema_name"],
+                        d["total_bookings"],
+                        f"\u00a3{d['total_revenue']:.2f}",
+                    ]
+                    for d in data
+                ],
+            )
 
             # Occupancy
             data = api.report_occupancy(y, m)
-            self._fill_table(self.occ_table, [
-                [d["cinema_name"], f"Screen {d['screen_number']}",
-                 d["total_seats"], d["total_bookings"],
-                 d["tickets_sold"], f"{d['occupancy_pct']}%"]
-                for d in data
-            ])
+            self._fill_table(
+                self.occ_table,
+                [
+                    [
+                        d["cinema_name"],
+                        f"Screen {d['screen_number']}",
+                        d["total_seats"],
+                        d["total_bookings"],
+                        d["tickets_sold"],
+                        f"{d['occupancy_pct']}%",
+                    ]
+                    for d in data
+                ],
+            )
 
             # Cancellation rate
             data = api.report_cancellation_rate(y, m)
-            self._fill_table(self.cancel_table, [
-                [d["cinema_name"], d["total_bookings"], d["cancelled"],
-                 f"{d['cancellation_rate']}%",
-                 f"\u00a3{d['fees_collected']:.2f}",
-                 f"\u00a3{d['total_refunded']:.2f}"]
-                for d in data
-            ])
+            self._fill_table(
+                self.cancel_table,
+                [
+                    [
+                        d["cinema_name"],
+                        d["total_bookings"],
+                        d["cancelled"],
+                        f"{d['cancellation_rate']}%",
+                        f"\u00a3{d['fees_collected']:.2f}",
+                        f"\u00a3{d['total_refunded']:.2f}",
+                    ]
+                    for d in data
+                ],
+            )
 
             show_toast(self, "Reports generated.", success=True)
 
@@ -220,9 +268,7 @@ class ReportsView(QWidget):
         m = self.month_spin.value()
         default_name = f"HCBS_{tab_name}_{y}_{m:02d}.csv"
 
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export CSV", default_name, "CSV Files (*.csv)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Export CSV", default_name, "CSV Files (*.csv)")
         if not path:
             return
 

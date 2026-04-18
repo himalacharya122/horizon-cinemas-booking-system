@@ -124,6 +124,9 @@ We use **Ruff** for high-performance linting/formatting and **Bandit** for secur
 ruff check .
 ruff format --check .
 
+# To automatically fix linting using ruff
+ruff check . --fix
+
 # To automatically format using ruff
 ruff format .
 

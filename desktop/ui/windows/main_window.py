@@ -1,12 +1,18 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/main_window.py
-
-Main application shell after login.
-Scrollable left sidebar with collapsible sections + stacked content panel.
-Sidebar items are role-gated and match the HCBS specification menus.
+implements the main application shell for Horizon Cinemas Booking System.
+it includes a scrollable sidebar with collapsible navigation sections and a QStackedWidget for managing content views.
 """
 
 from PyQt6.QtCore import Qt  # type: ignore
+from PyQt6.QtGui import QPainter, QPixmap  # type: ignore
+from PyQt6.QtSvg import QSvgRenderer  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
     QFrame,
     QHBoxLayout,
@@ -21,297 +27,387 @@ from PyQt6.QtWidgets import (  # type: ignore
 from desktop.api_client import api
 from desktop.ui.theme import (
     ACCENT,
-    ACCENT_LIGHT,
-    BG_DARK,
     BG_DARKEST,
-    BG_HOVER,
     BORDER,
-    BORDER_LIGHT,
-    TEXT_MUTED,
     TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    WHITE,
     body_font,
     heading_font,
 )
 
-# ─── Sidebar button ───
+# sidebar styling constants
+SIDEBAR_BG = "#F9F9F9"
+SIDEBAR_BORDER = "#D1D1D1"
+SIDEBAR_ITEM_HOVER = "#EEEEEE"
+SIDEBAR_TEXT = "#222222"
+SIDEBAR_TEXT_MUTED = "#777777"
+
+# SVG path data for sidebar navigation icons
+ICONS = {
+    "Film Listings": '<path d="M2 18h20V6H2v12zM7 6v12M17 6v12M2 12h20"/>',
+    "Browse All Films": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+    "New Booking": '<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>',
+    "Search Bookings": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    "My Bookings Today": '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    "Cancel Booking": '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+    "Cancelled Bookings": '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    "Manage Films": '<path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/>',
+    "Manage Listings": '<path d="M3 12h18M3 6h18M3 18h18"/>',
+    "Manage Pricing": '<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 18V6"/>',
+    "Manage Users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    "All Bookings": '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>',
+    "Cancellation Log": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+    "AI Insights": '<path d="m13 2-2 10h8l-2 10"/>',
+    "Reports": '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+    "Dashboard": '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18M9 21V9"/>',
+    "Manage Cinemas": '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+    "Create Staff": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>',
+    "My Profile": '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    "Help & Guide": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>',
+}
 
 
 class SidebarButton(QPushButton):
-    """Navigation button in the sidebar."""
+    """custom navigation button with dynamic SVG icons and hover states."""
 
     def __init__(self, text: str, icon_char: str = ""):
-        # Ignore icon_char to remove emojis for a professional look
-        display = f"  {text}"
-        super().__init__(display)
-        self.nav_label = text  # store clean label for matching
+        """initialises the SidebarButton with text and sets up its internal layout for icons."""
+        super().__init__()
+        self.nav_label = text
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFont(body_font(10))
+        self.setFont(body_font(10, bold=False))
+
+        # internal layout for icon and text alignment
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(12, 0, 12, 0)
+        self.layout.setSpacing(10)
+
+        self.icon_lbl = QLabel()
+        self.icon_lbl.setFixedSize(16, 16)
+        self.icon_lbl.setStyleSheet("border: none; background: transparent;")
+        self.layout.addWidget(self.icon_lbl)
+
+        self.text_lbl = QLabel(text)
+        self.text_lbl.setStyleSheet("border: none; background: transparent;")
+        self.layout.addWidget(self.text_lbl)
+        self.layout.addStretch(1)
+
         self._update_style(False)
 
     def _update_style(self, checked: bool):
-        if checked:
+        """updates the visual style of the button based on its checked state."""
+        color = ACCENT if checked else SIDEBAR_TEXT
+        font_weight = 700 if checked else 500
+        self.text_lbl.setStyleSheet(
+            f"color: {color}; font-weight: {font_weight}; border: none; background: transparent;"
+        )
+        self._set_icon(color)
+
+        self.setStyleSheet(
+            "QPushButton { background-color: transparent; border: none; min-height: 28px; max-height: 28px; }"
+        )
+        if not checked:
             self.setStyleSheet(
-                f"QPushButton {{ text-align: left; padding: 0px 24px; margin: 0px; "
-                f"background-color: {ACCENT_LIGHT}; color: {ACCENT}; "
-                f"border: none; border-left: 4px solid {ACCENT}; "
-                f"font-weight: 600; border-radius: 0; min-height: 34px; max-height: 34px; }}"
-            )
-        else:
-            self.setStyleSheet(
-                f"QPushButton {{ text-align: left; padding: 0px 24px; margin: 0px; "
-                f"background-color: transparent; color: {TEXT_SECONDARY}; "
-                f"border: none; border-left: 4px solid transparent; "
-                f"font-weight: 500; border-radius: 0; min-height: 34px; max-height: 34px; }}"
-                f"QPushButton:hover {{ background-color: {BG_HOVER}; color: {TEXT_PRIMARY}; "
-                f"border-left: 4px solid {BORDER_LIGHT}; }}"
+                self.styleSheet()
+                + f"QPushButton:hover {{ background-color: {SIDEBAR_ITEM_HOVER}; }}"
             )
 
+    def _set_icon(self, hex_color: str):
+        """renders and applies the SVG icon to the SidebarButton using the specified color."""
+        path_data = ICONS.get(self.nav_label, "")
+        if not path_data:
+            return
+        svg_data = f"""<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{hex_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path_data}</svg>""".encode(
+            "utf-8"
+        )
+        renderer = QSvgRenderer(svg_data)
+        pixmap = QPixmap(16, 16)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+        self.icon_lbl.setPixmap(pixmap)
+
     def setChecked(self, checked: bool):
+        """overrides the default setChecked method to trigger visual style updates."""
         super().setChecked(checked)
         self._update_style(checked)
 
 
-# ─── Collapsible section ───
-
-
 class CollapsibleSection(QWidget):
-    """A sidebar section header that can expand/collapse its child nav buttons."""
+    """a sidebar navigation group that can toggle the visibility of its child buttons."""
 
     def __init__(self, title: str):
+        """initialises the section with a title and sets up the toggleable container."""
         super().__init__()
         self._expanded = True
         self._buttons: list[SidebarButton] = []
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 8, 0, 0)
         layout.setSpacing(0)
 
-        # Section header (clickable)
-        self.header = QPushButton(f"  {title}   —")
-        self.header.setFont(body_font(9))
+        # header button that toggles the expansion state
+        self.header = QPushButton(f"  {title}   -")
+        self.header.setFont(body_font(8, bold=True))
         self.header.setCursor(Qt.CursorShape.PointingHandCursor)
         self.header.setStyleSheet(
-            f"QPushButton {{ text-align: left; color: {TEXT_SECONDARY}; "
-            f"font-weight: 600; letter-spacing: 0.5px; "
+            f"QPushButton {{ text-align: left; color: {SIDEBAR_TEXT_MUTED}; "
+            f"font-weight: 800; letter-spacing: 1px; "
             f"padding: 0px 16px; margin: 0px; border: none; "
-            f"min-height: 32px; max-height: 32px; "
+            f"min-height: 28px; max-height: 28px; "
             f"background: transparent; border-radius: 0; }}"
-            f"QPushButton:hover {{ color: {WHITE}; background: rgba(255,255,255,0.03); }}"
+            f"QPushButton:hover {{ color: {TEXT_PRIMARY}; }}"
         )
         self.header.clicked.connect(self._toggle)
         layout.addWidget(self.header)
 
-        # Container for buttons
+        # layout container for navigation buttons (with indentation)
         self.container = QWidget()
         self.container_layout = QVBoxLayout(self.container)
-        self.container_layout.setContentsMargins(0, 0, 0, 0)
+        self.container_layout.setContentsMargins(12, 0, 0, 0)
         self.container_layout.setSpacing(0)
         layout.addWidget(self.container)
 
         self._title = title
 
     def add_button(self, btn: SidebarButton):
+        """adds a SidebarButton to this section's layout."""
         self._buttons.append(btn)
         self.container_layout.addWidget(btn)
 
     def _toggle(self):
+        """toggles the expanded or collapsed state of the section content."""
         self._expanded = not self._expanded
         self.container.setVisible(self._expanded)
-        arrow = "—" if self._expanded else "+"
+        arrow = "-" if self._expanded else "+"
         self.header.setText(f"  {self._title}   {arrow}")
 
 
-# ─── Main window ───
-
-
 class MainWindow(QWidget):
+    """the primary application window that orchestrates sidebar navigation and content views."""
+
     def __init__(self, on_logout: callable):
+        """initialises the MainWindow and builds the global UI shell."""
         super().__init__()
         self.on_logout = on_logout
         self._nav_buttons: list[SidebarButton] = []
         self._build_ui()
 
     def _build_ui(self):
+        """constructs the primary layout including the sidebar, scroll area, and content stack."""
         root = QHBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # ─── Sidebar outer frame ───
+        # sidebar structure
         sidebar_frame = QFrame()
-        sidebar_frame.setFixedWidth(260)
+        sidebar_frame.setFixedWidth(300)
         sidebar_frame.setStyleSheet(
-            f"QFrame {{ background-color: {BG_DARK}; border-right: 1px solid {BORDER}; }}"
+            f"QFrame {{ background-color: {SIDEBAR_BG}; border-right: 1px solid {SIDEBAR_BORDER}; }}"
         )
         sidebar_outer = QVBoxLayout(sidebar_frame)
         sidebar_outer.setContentsMargins(0, 0, 0, 0)
         sidebar_outer.setSpacing(0)
 
-        # Brand header
+        # brand section containing the logo and cinema information
         brand_frame = QFrame()
-        brand_frame.setFixedHeight(60)
-        brand_frame.setStyleSheet(f"border-bottom: 1px solid {BORDER}; background: {BG_DARK};")
-        bl = QVBoxLayout(brand_frame)
-        bl.setContentsMargins(16, 8, 16, 8)
-        brand = QLabel("HORIZON CINEMAS")
-        brand.setFont(heading_font(10))
-        brand.setStyleSheet(
-            f"color: {ACCENT}; background: transparent; border: none; letter-spacing: 1px;"
+        brand_frame.setFixedHeight(80)
+        brand_frame.setStyleSheet(
+            f"background: transparent; border: none; border-bottom: 1px solid {BORDER};"
         )
-        bl.addWidget(brand)
+        bl = QHBoxLayout(brand_frame)
+        bl.setContentsMargins(16, 0, 16, 0)
+        bl.setSpacing(12)
+
+        logo_label = self._make_logo_label(32)
+        logo_label.setStyleSheet("border: none; background: transparent;")
+        bl.addWidget(logo_label)
+
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(0)
+        text_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        brand_title = QLabel('Horizon <span style="color: #B91C1C;">Cinemas</span>')
+        brand_title.setFont(heading_font(11, bold=True))
+        brand_title.setStyleSheet("color: #0A0908; background: transparent; border: none;")
+        text_layout.addWidget(brand_title)
+
         cinema_lbl = QLabel(api.cinema_name)
-        cinema_lbl.setFont(body_font(7))
-        cinema_lbl.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent; border: none;")
-        bl.addWidget(cinema_lbl)
+        cinema_lbl.setFont(body_font(8, bold=True))
+        cinema_lbl.setStyleSheet(
+            f"color: {SIDEBAR_TEXT_MUTED}; background: transparent; border: none;"
+        )
+        text_layout.addWidget(cinema_lbl)
+        bl.addLayout(text_layout)
+        bl.addStretch(1)
         sidebar_outer.addWidget(brand_frame)
 
-        # Scrollable nav area
+        # scrollable navigation area for sidebar sections
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setStyleSheet(
-            f"QScrollArea {{ border: none; background: {BG_DARK}; }}"
-            f"QScrollBar:vertical {{ width: 6px; background: {BG_DARK}; border: none; "
-            f"margin: 0px; }}"
-            f"QScrollBar::handle:vertical {{ background: {BORDER_LIGHT}; "
-            f"border-radius: 3px; min-height: 30px; }}"
-            f"QScrollBar::handle:vertical:hover {{ background: {ACCENT}; }}"
-            f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ "
-            f"height: 0; border: none; }}"
-            f"QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ "
-            f"background: none; }}"
+            f"QScrollArea {{ border: none; background: transparent; }}"
+            f"QScrollBar:vertical {{ width: 7px; background: {SIDEBAR_BG}; border: none; margin-right: 1px; }}"
+            f"QScrollBar::handle:vertical {{ background: {ACCENT}; border-radius: 3px; min-height: 40px; border: none; }}"
+            f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; border: none; background: none; }}"
+            f"QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: {SIDEBAR_BG}; border: none; }}"
         )
 
         nav_widget = QWidget()
-        nav_widget.setStyleSheet(f"background: {BG_DARK};")
+        nav_widget.setStyleSheet("background: transparent; border: none;")
         sb = QVBoxLayout(nav_widget)
-        sb.setContentsMargins(0, 4, 0, 4)
+        sb.setContentsMargins(0, 5, 0, 5)
         sb.setSpacing(0)
 
+        # role-based generation of sidebar menu items
         role = api.role
 
-        # Section: FILMS
-        films_sec = CollapsibleSection("FILMS")
-        self._add_nav(films_sec, "Film Listings", "\U0001f3ac")
-        self._add_nav(films_sec, "Browse All Films", "\U0001f4fd")
-        sb.addWidget(films_sec)
+        # films and bookings section accessible to all staff
+        fb_sec = CollapsibleSection("Films and Bookings")
+        self._add_nav(fb_sec, "Film Listings")
+        self._add_nav(fb_sec, "Browse All Films")
+        self._add_nav(fb_sec, "New Booking")
+        self._add_nav(fb_sec, "Search Bookings")
+        self._add_nav(fb_sec, "My Bookings Today")
+        sb.addWidget(fb_sec)
 
-        # Section: BOOKINGS
-        bookings_sec = CollapsibleSection("BOOKINGS")
-        self._add_nav(bookings_sec, "New Booking", "\U0001f3ab")
-        self._add_nav(bookings_sec, "Search Bookings", "\U0001f50d")
-        self._add_nav(bookings_sec, "My Bookings Today", "\U0001f4c5")
-        sb.addWidget(bookings_sec)
-
-        # Section: CANCELLATIONS
-        cancel_sec = CollapsibleSection("CANCELLATIONS")
-        self._add_nav(cancel_sec, "Cancel Booking", "\u2716")
-        self._add_nav(cancel_sec, "Cancelled Bookings", "\U0001f4cb")
+        # cancellations management section
+        cancel_sec = CollapsibleSection("Cancellations")
+        self._add_nav(cancel_sec, "Cancel Booking")
+        self._add_nav(cancel_sec, "Cancelled Bookings")
         sb.addWidget(cancel_sec)
 
-        # Section: ADMINISTRATION (admin/manager only)
+        # administrative tools for Admin and Manager roles
         if role in ("admin", "manager"):
-            admin_sec = CollapsibleSection("ADMINISTRATION")
-            self._add_nav(admin_sec, "Manage Films", "\U0001f3ac")
-            self._add_nav(admin_sec, "Manage Listings", "\U0001f4cb")
-            self._add_nav(admin_sec, "Manage Pricing", "\U0001f4b0")
-            self._add_nav(admin_sec, "Manage Users", "\U0001f465")
-            self._add_nav(admin_sec, "All Bookings", "\U0001f4ca")
-            self._add_nav(admin_sec, "Cancellation Log", "\U0001f4dc")
-            self._add_nav(admin_sec, "AI Insights", "\U0001f916")
-            self._add_nav(admin_sec, "Reports", "\U0001f4c8")
+            admin_sec = CollapsibleSection("Administration")
+            self._add_nav(admin_sec, "Manage Films")
+            self._add_nav(admin_sec, "Manage Listings")
+            self._add_nav(admin_sec, "Manage Pricing")
+            self._add_nav(admin_sec, "Manage Users")
+            self._add_nav(admin_sec, "All Bookings")
+            self._add_nav(admin_sec, "Cancellation Log")
+            self._add_nav(admin_sec, "AI Insights")
+            self._add_nav(admin_sec, "Reports")
             sb.addWidget(admin_sec)
 
-        # Section: MANAGEMENT (manager only)
+        # management exclusive tools for the Manager role
         if role == "manager":
-            mgr_sec = CollapsibleSection("MANAGEMENT")
-            self._add_nav(mgr_sec, "Dashboard", "\U0001f4ca")
-            self._add_nav(mgr_sec, "Manage Cinemas", "\U0001f3e2")
-            self._add_nav(mgr_sec, "Create Staff", "\U0001f464")
+            mgr_sec = CollapsibleSection("Management")
+            self._add_nav(mgr_sec, "Dashboard")
+            self._add_nav(mgr_sec, "Manage Cinemas")
+            self._add_nav(mgr_sec, "Create Staff")
             sb.addWidget(mgr_sec)
 
-        # Section: ACCOUNT
-        acct_sec = CollapsibleSection("ACCOUNT")
-        self._add_nav(acct_sec, "My Profile", "\U0001f464")
-        self._add_nav(acct_sec, "Help & Guide", "\u2753")
+        # personal account management section
+        acct_sec = CollapsibleSection("Account")
+        self._add_nav(acct_sec, "My Profile")
+        self._add_nav(acct_sec, "Help & Guide")
         sb.addWidget(acct_sec)
 
         sb.addStretch(1)
-
         scroll.setWidget(nav_widget)
         sidebar_outer.addWidget(scroll, 1)
 
-        # User info + logout (fixed at bottom)
+        # bottom user profile section with logout trigger
         user_frame = QFrame()
-        user_frame.setFixedHeight(120)
-        user_frame.setStyleSheet(f"border-top: 1px solid {BORDER}; background: {BG_DARKEST};")
-        uf = QVBoxLayout(user_frame)
-        uf.setContentsMargins(16, 8, 16, 8)
-        uf.setSpacing(2)
+        user_frame.setFixedHeight(90)
+        user_frame.setStyleSheet(
+            f"background: transparent; border: none; border-top: 1px solid {BORDER};"
+        )
+        ul = QHBoxLayout(user_frame)
+        ul.setContentsMargins(16, 0, 16, 12)
+        ul.setSpacing(10)
+        ul.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
+        # avatar circle showing the user's initials
+        initials = "".join([n[0] for n in api.display_name.split()[:2]]).upper()
+        avatar = QLabel(initials)
+        avatar.setFixedSize(34, 34)
+        avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        avatar.setFont(body_font(9, bold=True))
+        avatar.setStyleSheet(
+            "background-color: #0A0908; color: #FFFFFF; border-radius: 17px; border: none;"
+        )
+        ul.addWidget(avatar)
+
+        # user details including name and role
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(0)
+        info_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         name_lbl = QLabel(api.display_name)
-        name_lbl.setFont(body_font(10))
-        name_lbl.setStyleSheet(
-            f"color: {TEXT_PRIMARY}; background: transparent; font-weight: 600; border: none;"
-        )
-        uf.addWidget(name_lbl)
-
+        name_lbl.setFont(body_font(10, bold=True))
+        name_lbl.setStyleSheet("color: #0A0908; border: none; background: transparent;")
+        info_layout.addWidget(name_lbl)
         role_lbl = QLabel(api.role.replace("_", " ").title())
-        role_lbl.setFont(body_font(9))
+        role_lbl.setFont(body_font(7, bold=True))
         role_lbl.setStyleSheet(
-            f"color: {TEXT_MUTED}; background: transparent; border: none; font-weight: 500;"
+            f"color: {SIDEBAR_TEXT_MUTED}; border: none; background: transparent;"
         )
-        uf.addWidget(role_lbl)
+        info_layout.addWidget(role_lbl)
+        ul.addLayout(info_layout)
+        ul.addStretch(1)
 
+        # button to trigger the logout process
         logout_btn = QPushButton("Sign Out")
         logout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        logout_btn.setFont(body_font(10))
+        logout_btn.setFont(body_font(8, bold=True))
         logout_btn.setStyleSheet(
-            f"QPushButton {{ color: {TEXT_SECONDARY}; background: transparent; "
-            f"border: 1px solid {BORDER}; border-radius: 4px; padding: 5px; "
-            f"margin-top: 4px; font-weight: 500; }}"
-            f"QPushButton:hover {{ background: {BG_HOVER}; color: {TEXT_PRIMARY}; }}"
+            f"QPushButton {{ color: {SIDEBAR_TEXT_MUTED}; background: transparent; border: none; padding: 4px; }} QPushButton:hover {{ color: {ACCENT}; }}"
         )
         logout_btn.clicked.connect(self._do_logout)
-        uf.addWidget(logout_btn)
-
+        ul.addWidget(logout_btn)
         sidebar_outer.addWidget(user_frame)
+
         root.addWidget(sidebar_frame)
 
-        # ─── Content area ───
+        # main QStackedWidget to host content views
         self.stack = QStackedWidget()
         self.stack.setStyleSheet(f"background-color: {BG_DARKEST};")
         root.addWidget(self.stack, 1)
 
         self._pages: dict[str, QWidget] = {}
-
         if self._nav_buttons:
             self._nav_buttons[0].click()
 
-    # Navigation helpers
+    def _make_logo_label(self, size: int) -> QLabel:
+        """renders a circular application logo using SVG data as a QLabel pixmap."""
+        lbl = QLabel()
+        lbl.setFixedSize(size, size)
+        svg_data = f"""<svg width="{size}" height="{size}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="black"/><rect x="20" y="15" width="6" height="34" fill="white"/><rect x="38" y="15" width="6" height="34" fill="white"/><rect x="20" y="29" width="24" height="6" fill="white"/></svg>""".encode(
+            "utf-8"
+        )
+        renderer = QSvgRenderer(svg_data)
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+        lbl.setPixmap(pixmap)
+        return lbl
 
-    def _add_nav(self, section: CollapsibleSection, label: str, icon: str = ""):
-        btn = SidebarButton(label, icon)
+    def _add_nav(self, section: CollapsibleSection, label: str):
+        """instantiates a SidebarButton and connects it to the navigation logic."""
+        btn = SidebarButton(label)
         btn.clicked.connect(lambda checked, label_val=label: self._navigate(label_val))
         section.add_button(btn)
         self._nav_buttons.append(btn)
 
     def _navigate(self, label: str):
+        """updates sidebar selection and switches the content stack to the requested view."""
         for btn in self._nav_buttons:
             btn.setChecked(btn.nav_label == label)
-
         if label not in self._pages:
             page = self._create_page(label)
             self._pages[label] = page
             self.stack.addWidget(page)
-
         self.stack.setCurrentWidget(self._pages[label])
 
     def _create_page(self, label: str) -> QWidget:
-        """Create the appropriate view widget for a nav label."""
-        # Booking Staff pages
+        """factory method to instantiate the appropriate view widget based on the navigation label."""
+        # staff views
         if label == "Film Listings":
             from desktop.ui.windows.booking_staff.film_listings import FilmListingsView
 
@@ -349,7 +445,7 @@ class MainWindow(QWidget):
 
             return HelpView()
 
-        # Admin pages
+        # admin and analytics views
         if api.role in ("admin", "manager"):
             if label == "Manage Films":
                 from desktop.ui.windows.admin.manage_films import ManageFilmsView
@@ -384,7 +480,7 @@ class MainWindow(QWidget):
 
                 return AIInsightsView()
 
-        # Manager pages
+        # manager exclusive views
         if api.role == "manager":
             if label == "Dashboard":
                 from desktop.ui.windows.manager.dashboard import DashboardView
@@ -399,7 +495,7 @@ class MainWindow(QWidget):
 
                 return CreateStaffView()
 
-        # Fallback
+        # fallback for undefined routes
         from desktop.ui.theme import TEXT_MUTED
 
         placeholder = QLabel(f"{label}\n\nComing soon...")
@@ -409,5 +505,6 @@ class MainWindow(QWidget):
         return placeholder
 
     def _do_logout(self):
+        """clears the session via API and triggers the on_logout callback."""
         api.logout()
         self.on_logout()

@@ -65,7 +65,7 @@ class LoginWindow(QWidget):
 
         # Login Card
         card = QFrame()
-        card.setFixedWidth(400)
+        card.setFixedWidth(450)
         card.setStyleSheet(
             f"QFrame {{ background: {BG_CARD}; border: 1px solid {BORDER}; border-radius: 10px; }}"
         )

@@ -13,20 +13,9 @@ from PyQt6.QtWidgets import (  # type: ignore
     QWidget,
 )
 
-
-
-
-
-
-
-
-
-
-
-
-
 from desktop.api_client import api
 from desktop.ui.theme import (
+    ACCENT,
     ACCENT_HOVER,
     BG_CARD,
     BG_DARKEST,

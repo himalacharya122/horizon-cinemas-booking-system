@@ -230,6 +230,24 @@ class ApiClient:
             {"current_password": current_password, "new_password": new_password},
         )
 
+    # AI Analytics
+    def post_ai_query(self, query: str, history: list = None, session_id: int = None) -> dict:
+        payload = {"query": query}
+        if history:
+            payload["history"] = history
+        if session_id:
+            payload["session_id"] = session_id
+        return self.post("/ai/query", payload)
+
+    def get_ai_sessions(self) -> list:
+        return self.get("/ai/sessions")
+
+    def create_ai_session(self) -> dict:
+        return self.post("/ai/sessions")
+
+    def get_ai_session_messages(self, session_id: int) -> list:
+        return self.get(f"/ai/sessions/{session_id}/messages")
+
 
 # Singleton instance — shared across all windows
 api = ApiClient()

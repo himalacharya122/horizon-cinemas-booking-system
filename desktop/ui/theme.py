@@ -21,33 +21,33 @@ from pathlib import Path
 from PyQt6.QtGui import QFont, QFontDatabase  # type: ignore
 
 # Dark Cinema Backgrounds
-BG_DARKEST = "#222831"  # Main app / content area background
-BG_DARK = "#393E46"  # Sidebar, panels
-BG_CARD = "#2E3440"  # Slightly lifted surface (blend of dark tones)
-BG_INPUT = "#3F454F"  # Input fields, combo boxes (lighter than panel)
-BG_HOVER = "#4A505A"  # Hover state
+BG_DARKEST = "#0F0F10"   # Deep black background
+BG_DARK = "#1A1A1D"      # Panels / sidebar
+BG_CARD = "#202124"      # Cards / elevated surfaces
+BG_INPUT = "#2A2B2F"     # Inputs / fields
+BG_HOVER = "#34363B"     # Hover state
 
 # Borders
-BORDER = "#393E46"  # Default borders
-BORDER_LIGHT = "#4A505A"  # Focus / lighter borders
+BORDER = "#2C2F33"       # Default borders
+BORDER_LIGHT = "#3A3D42" # Focus / lighter borders
 
 # Text
-TEXT_PRIMARY = "#EEEEEE"  # Primary readable text
-TEXT_SECONDARY = "#C9D1D9"  # Softer light gray
-TEXT_MUTED = "#9AA4AF"  # Muted text
+TEXT_PRIMARY = "#FFFFFF"     # Crisp white
+TEXT_SECONDARY = "#D1D5DB"   # Soft gray
+TEXT_MUTED = "#9CA3AF"       # Muted text
 
-# Accent — Teal Accent
-ACCENT = "#00ADB5"
-ACCENT_HOVER = "#0199A1"  # Slightly darker teal for hover
-ACCENT_LIGHT = "#0F2E30"  # Subtle teal-tinted background
+# Accent
+ACCENT = "#E50914"           # Strong red (primary accent)
+ACCENT_HOVER = "#B20710"     # Darker red hover
+ACCENT_LIGHT = "#2A0F11"     # Subtle red-tinted background
 
 # Supporting Colours
-GOLD = "#F6C744"  # IMDb ratings, stars
-SUCCESS = "#2DD4BF"  # Confirmed, positive
-DANGER = "#FC5C65"  # Cancel, errors
-DANGER_HOVER = "#EB3B5A"
+GOLD = "#FFC107"             # Ratings / highlights
+SUCCESS = "#22C55E"          # Success state
+DANGER = "#EF4444"           # Errors
+DANGER_HOVER = "#DC2626"
 
-# Legacy aliases (backward compatibility with admin/manager pages)
+# Legacy aliases
 WHITE = "#FFFFFF"
 SNOW = BG_CARD
 SILVER = BORDER
@@ -56,7 +56,7 @@ SLATE = "#6B7280"
 CHARCOAL = TEXT_PRIMARY
 BLACK = "#F5F5F7"
 
-ACCENT_LIGHT_LEGACY = ACCENT_LIGHT  # some old code may reference
+ACCENT_LIGHT_LEGACY = ACCENT_LIGHT
 
 # Font Loading
 FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"

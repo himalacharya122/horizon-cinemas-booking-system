@@ -84,9 +84,12 @@ def heading_font(size: int = 16, bold: bool = True) -> QFont:
     return f
 
 
-def body_font(size: int = 11) -> QFont:
+def body_font(size: int = 11, bold: bool = False) -> QFont:
     """Inter font for body text."""
-    return QFont("Inter", size)
+    f = QFont("Inter", size)
+    if bold:
+        f.setBold(True)
+    return f
 
 
 # Spacing / Sizing

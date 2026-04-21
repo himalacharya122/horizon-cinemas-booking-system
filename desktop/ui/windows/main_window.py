@@ -35,14 +35,14 @@ from desktop.ui.theme import (
     heading_font,
 )
 
-# Sidebar button
+# ─── Sidebar button ───
 
 
 class SidebarButton(QPushButton):
     """Navigation button in the sidebar."""
 
     def __init__(self, text: str, icon_char: str = ""):
-        # Ignore icon_char completely to remove emojis for a professional look
+        # Ignore icon_char to remove emojis for a professional look
         display = f"  {text}"
         super().__init__(display)
         self.nav_label = text  # store clean label for matching
@@ -74,7 +74,7 @@ class SidebarButton(QPushButton):
         self._update_style(checked)
 
 
-# Collapsible section
+# ─── Collapsible section ───
 
 
 class CollapsibleSection(QWidget):
@@ -124,7 +124,7 @@ class CollapsibleSection(QWidget):
         self.header.setText(f"  {self._title}   {arrow}")
 
 
-# Main window
+# ─── Main window ───
 
 
 class MainWindow(QWidget):
@@ -139,7 +139,7 @@ class MainWindow(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Sidebar outer frame
+        # ─── Sidebar outer frame ───
         sidebar_frame = QFrame()
         sidebar_frame.setFixedWidth(260)
         sidebar_frame.setStyleSheet(
@@ -149,7 +149,7 @@ class MainWindow(QWidget):
         sidebar_outer.setContentsMargins(0, 0, 0, 0)
         sidebar_outer.setSpacing(0)
 
-        # Brand header (fixed, not scrollable)
+        # Brand header
         brand_frame = QFrame()
         brand_frame.setFixedHeight(60)
         brand_frame.setStyleSheet(f"border-bottom: 1px solid {BORDER}; background: {BG_DARK};")
@@ -192,26 +192,26 @@ class MainWindow(QWidget):
 
         role = api.role
 
-        # FILMS
+        # Section: FILMS
         films_sec = CollapsibleSection("FILMS")
         self._add_nav(films_sec, "Film Listings", "\U0001f3ac")
         self._add_nav(films_sec, "Browse All Films", "\U0001f4fd")
         sb.addWidget(films_sec)
 
-        # BOOKINGS
+        # Section: BOOKINGS
         bookings_sec = CollapsibleSection("BOOKINGS")
         self._add_nav(bookings_sec, "New Booking", "\U0001f3ab")
         self._add_nav(bookings_sec, "Search Bookings", "\U0001f50d")
         self._add_nav(bookings_sec, "My Bookings Today", "\U0001f4c5")
         sb.addWidget(bookings_sec)
 
-        # CANCELLATIONS
+        # Section: CANCELLATIONS
         cancel_sec = CollapsibleSection("CANCELLATIONS")
         self._add_nav(cancel_sec, "Cancel Booking", "\u2716")
         self._add_nav(cancel_sec, "Cancelled Bookings", "\U0001f4cb")
         sb.addWidget(cancel_sec)
 
-        # ADMIN (admin/manager only)
+        # Section: ADMINISTRATION (admin/manager only)
         if role in ("admin", "manager"):
             admin_sec = CollapsibleSection("ADMINISTRATION")
             self._add_nav(admin_sec, "Manage Films", "\U0001f3ac")
@@ -220,10 +220,11 @@ class MainWindow(QWidget):
             self._add_nav(admin_sec, "Manage Users", "\U0001f465")
             self._add_nav(admin_sec, "All Bookings", "\U0001f4ca")
             self._add_nav(admin_sec, "Cancellation Log", "\U0001f4dc")
+            self._add_nav(admin_sec, "AI Insights", "\U0001f916")
             self._add_nav(admin_sec, "Reports", "\U0001f4c8")
             sb.addWidget(admin_sec)
 
-        # MANAGER (manager only)
+        # Section: MANAGEMENT (manager only)
         if role == "manager":
             mgr_sec = CollapsibleSection("MANAGEMENT")
             self._add_nav(mgr_sec, "Dashboard", "\U0001f4ca")
@@ -231,7 +232,7 @@ class MainWindow(QWidget):
             self._add_nav(mgr_sec, "Create Staff", "\U0001f464")
             sb.addWidget(mgr_sec)
 
-        # ACCOUNT
+        # Section: ACCOUNT
         acct_sec = CollapsibleSection("ACCOUNT")
         self._add_nav(acct_sec, "My Profile", "\U0001f464")
         self._add_nav(acct_sec, "Help & Guide", "\u2753")
@@ -242,7 +243,7 @@ class MainWindow(QWidget):
         scroll.setWidget(nav_widget)
         sidebar_outer.addWidget(scroll, 1)
 
-        # User info + logout (fixed at bottom, not scrollable)
+        # User info + logout (fixed at bottom)
         user_frame = QFrame()
         user_frame.setFixedHeight(120)
         user_frame.setStyleSheet(f"border-top: 1px solid {BORDER}; background: {BG_DARKEST};")
@@ -279,7 +280,7 @@ class MainWindow(QWidget):
         sidebar_outer.addWidget(user_frame)
         root.addWidget(sidebar_frame)
 
-        # Content area
+        # ─── Content area ───
         self.stack = QStackedWidget()
         self.stack.setStyleSheet(f"background-color: {BG_DARKEST};")
         root.addWidget(self.stack, 1)
@@ -310,7 +311,7 @@ class MainWindow(QWidget):
 
     def _create_page(self, label: str) -> QWidget:
         """Create the appropriate view widget for a nav label."""
-        # ─── Booking Staff pages ───
+        # Booking Staff pages
         if label == "Film Listings":
             from desktop.ui.windows.booking_staff.film_listings import FilmListingsView
 
@@ -378,6 +379,10 @@ class MainWindow(QWidget):
                 from desktop.ui.windows.admin.reports import ReportsView
 
                 return ReportsView()
+            elif label == "AI Insights":
+                from desktop.ui.windows.admin.ai_insights import AIInsightsView
+
+                return AIInsightsView()
 
         # Manager pages
         if api.role == "manager":
@@ -395,6 +400,8 @@ class MainWindow(QWidget):
                 return CreateStaffView()
 
         # Fallback
+        from desktop.ui.theme import TEXT_MUTED
+
         placeholder = QLabel(f"{label}\n\nComing soon...")
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         placeholder.setFont(body_font(14))

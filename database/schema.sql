@@ -1,6 +1,8 @@
 -- Horizon Cinemas Booking System (HCBS)
 -- Database Schema
 
+DROP DATABASE IF EXISTS hcbs;
+
 CREATE DATABASE IF NOT EXISTS hcbs;
 USE hcbs;
 
@@ -302,3 +304,28 @@ JOIN cinemas c ON u.cinema_id = c.cinema_id
 GROUP BY u.user_id, u.username, u.first_name, u.last_name, c.cinema_name,
          DATE_FORMAT(b.booking_date, '%Y-%m')
 ORDER BY month DESC, total_bookings DESC;
+
+-- TABLE: ai_chat_sessions
+-- Tracks distinct AI chat conversations per user
+CREATE TABLE ai_chat_sessions (
+    session_id  INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    title       VARCHAR(255) NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ai_sess_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_user_sessions (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- TABLE: ai_chat_messages
+-- Stores individual messages within a session
+CREATE TABLE ai_chat_messages (
+    message_id  INT AUTO_INCREMENT PRIMARY KEY,
+    session_id  INT NOT NULL,
+    role        ENUM('user', 'assistant') NOT NULL,
+    content     TEXT NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ai_msg_sess FOREIGN KEY (session_id) REFERENCES ai_chat_sessions(session_id) ON DELETE CASCADE,
+    INDEX idx_session_messages (session_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

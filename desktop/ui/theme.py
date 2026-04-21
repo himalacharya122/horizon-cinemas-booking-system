@@ -21,30 +21,30 @@ from pathlib import Path
 from PyQt6.QtGui import QFont, QFontDatabase  # type: ignore
 
 # Dark Cinema Backgrounds
-BG_DARKEST = "#0F0F10"   # Deep black background
-BG_DARK = "#1A1A1D"      # Panels / sidebar
-BG_CARD = "#202124"      # Cards / elevated surfaces
-BG_INPUT = "#2A2B2F"     # Inputs / fields
-BG_HOVER = "#34363B"     # Hover state
+BG_DARKEST = "#0F0F10"  # Deep black background
+BG_DARK = "#1A1A1D"  # Panels / sidebar
+BG_CARD = "#202124"  # Cards / elevated surfaces
+BG_INPUT = "#2A2B2F"  # Inputs / fields
+BG_HOVER = "#34363B"  # Hover state
 
 # Borders
-BORDER = "#2C2F33"       # Default borders
-BORDER_LIGHT = "#3A3D42" # Focus / lighter borders
+BORDER = "#2C2F33"  # Default borders
+BORDER_LIGHT = "#3A3D42"  # Focus / lighter borders
 
 # Text
-TEXT_PRIMARY = "#FFFFFF"     # Crisp white
-TEXT_SECONDARY = "#D1D5DB"   # Soft gray
-TEXT_MUTED = "#9CA3AF"       # Muted text
+TEXT_PRIMARY = "#FFFFFF"  # Crisp white
+TEXT_SECONDARY = "#D1D5DB"  # Soft gray
+TEXT_MUTED = "#9CA3AF"  # Muted text
 
 # Accent
-ACCENT = "#E50914"           # Strong red (primary accent)
-ACCENT_HOVER = "#B20710"     # Darker red hover
-ACCENT_LIGHT = "#2A0F11"     # Subtle red-tinted background
+ACCENT = "#E50914"  # Strong red (primary accent)
+ACCENT_HOVER = "#B20710"  # Darker red hover
+ACCENT_LIGHT = "#2A0F11"  # Subtle red-tinted background
 
 # Supporting Colours
-GOLD = "#FFC107"             # Ratings / highlights
-SUCCESS = "#22C55E"          # Success state
-DANGER = "#EF4444"           # Errors
+GOLD = "#FFC107"  # Ratings / highlights
+SUCCESS = "#22C55E"  # Success state
+DANGER = "#EF4444"  # Errors
 DANGER_HOVER = "#DC2626"
 
 # Legacy aliases

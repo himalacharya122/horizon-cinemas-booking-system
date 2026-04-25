@@ -1,3 +1,9 @@
+# ============================================
+# Author: Garima Adhikari
+# Student ID: 24000896
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/models/film.py
 ORM models for: Film, Listing, Showing

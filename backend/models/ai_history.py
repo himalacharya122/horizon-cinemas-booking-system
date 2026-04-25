@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 from datetime import datetime
 
 from sqlalchemy import TIMESTAMP, Column, Enum, ForeignKey, Integer, String, Text

@@ -1,7 +1,7 @@
 """
 desktop/ui/widgets.py
 Reusable UI components: buttons, cards, form rows, badges, toast messages.
-Dark cinema theme.
+Light cinema theme.
 """
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer  # type: ignore
@@ -64,7 +64,7 @@ def heading_label(text: str, size: int = 18) -> QLabel:
     lbl = QLabel(text)
     lbl.setProperty("heading", True)
     lbl.setFont(heading_font(size))
-    lbl.setStyleSheet(f"color: {WHITE}; background: transparent;")
+    lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; background: transparent;")
     return lbl
 
 

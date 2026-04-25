@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-05-05
+# ============================================
+
 """
 backend/models/__init__.py
 Import all models here so that Base.metadata knows about every table.

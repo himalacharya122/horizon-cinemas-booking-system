@@ -1,3 +1,9 @@
+# ============================================
+# Author: Smriti Ale
+# Student ID: 24036547
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 tests/integration/test_auth.py
 Integration tests for POST /api/v1/auth/login.

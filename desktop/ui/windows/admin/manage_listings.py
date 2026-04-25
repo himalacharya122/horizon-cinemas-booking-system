@@ -1,3 +1,9 @@
+# ============================================
+# Author: Astha Gurung
+# Student ID: 24036542
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/admin/manage_listings.py
 implements the listing management interface for Administrators to coordinate film schedules across cinema screens.

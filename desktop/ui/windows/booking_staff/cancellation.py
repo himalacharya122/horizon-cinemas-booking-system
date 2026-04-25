@@ -1,3 +1,9 @@
+# ============================================
+# Author: Astha Gurung
+# Student ID: 24036542
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/cancellation.py
 implements the Booking Cancellation view for Booking Staff.

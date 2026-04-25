@@ -1,10 +1,20 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
+import asyncio
 import json
+import logging
 import re
 from typing import Any, Dict, List, Optional
 
 import httpx
 from sqlalchemy import text  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
+
+log = logging.getLogger(__name__)
 
 from backend.core.exceptions import ValidationError
 from config.settings import GROQ_API_KEY, GROQ_MODEL_PRIMARY
@@ -101,8 +111,13 @@ async def call_groq(
     messages: List[Dict[str, str]],
     model: str = GROQ_MODEL_PRIMARY,
     temperature: float = 0.1,
+    max_retries: int = 4,
 ) -> str:
-    """Sends a request to the Groq API."""
+    """
+    Send a request to the Groq API.
+    On 429 (rate-limit), read the Retry-After header and wait before retrying.
+    Retries up to max_retries times with exponential back-off as a fallback.
+    """
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": model,
@@ -111,11 +126,36 @@ async def call_groq(
         "max_tokens": 1024,
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(GROQ_URL, headers=headers, json=payload)
-        resp.raise_for_status()
-        result = resp.json()
-        return result["choices"][0]["message"]["content"]
+    async with httpx.AsyncClient(timeout=45.0) as client:
+        for attempt in range(max_retries):
+            resp = await client.post(GROQ_URL, headers=headers, json=payload)
+
+            if resp.status_code == 429:
+                # Groq returns Retry-After in seconds (may be fractional)
+                retry_after_raw = resp.headers.get("retry-after") or resp.headers.get(
+                    "x-ratelimit-reset-requests"
+                )
+                try:
+                    wait = float(retry_after_raw) + 0.5
+                except (TypeError, ValueError):
+                    # Fallback: exponential back-off (2s, 4s, 8s, …)
+                    wait = 2.0 ** (attempt + 1)
+
+                log.warning(
+                    "Groq 429 on attempt %d/%d — waiting %.1fs before retry.",
+                    attempt + 1,
+                    max_retries,
+                    wait,
+                )
+                await asyncio.sleep(wait)
+                continue
+
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+
+    raise RuntimeError(
+        "Groq rate limit: all retries exhausted. Please wait a moment and try again."
+    )
 
 
 async def execute_ai_query(
@@ -181,7 +221,9 @@ async def execute_ai_query(
             add_message(db, session_id, "assistant", answer)
         return {"answer": answer}
 
-    # 3. Summarize Result
+    # 3. Summarize Result — brief pause so the two calls don't hit back-to-back
+    await asyncio.sleep(0.4)
+
     summary_messages = [
         {"role": "system", "content": "You are a professional cinema analyst."},
         {

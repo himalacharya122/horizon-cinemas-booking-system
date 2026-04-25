@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/booking_service.py
 Core business logic for bookings: availability, pricing, creation,
@@ -352,12 +358,8 @@ def create_booking(db: Session, data: dict, booked_by: int) -> Booking:
     seat_ids = data.get("seat_ids")
     if seat_ids:
         if len(seat_ids) != num_tickets:
-            raise BookingError(
-                f"Selected {len(seat_ids)} seat(s) but num_tickets is {num_tickets}"
-            )
-        seats = _get_seats_by_ids(
-            db, screen.screen_id, showing_id, show_date, seat_type, seat_ids
-        )
+            raise BookingError(f"Selected {len(seat_ids)} seat(s) but num_tickets is {num_tickets}")
+        seats = _get_seats_by_ids(db, screen.screen_id, showing_id, show_date, seat_type, seat_ids)
     else:
         seats = _find_available_seats(
             db, screen.screen_id, showing_id, show_date, seat_type, num_tickets
@@ -463,7 +465,7 @@ def get_booking_by_reference(db: Session, reference: str) -> Booking:
         .first()
     )
     if not booking:
-        raise NotFoundError("Booking")
+        raise NotFoundError("Booking reference")
     return booking
 
 
@@ -491,21 +493,28 @@ def search_bookings(
     customer_phone: Optional[str] = None,
     booked_by: Optional[int] = None,
     booking_date: Optional[date] = None,
+    reference: Optional[str] = None,
 ) -> list[Booking]:
     """Flexible booking search for staff."""
+    # Use outer joins to ensure we see bookings even if listings are inactive/missing
     query = (
         db.query(Booking)
-        .join(Showing, Booking.showing_id == Showing.showing_id)
-        .join(Listing, Showing.listing_id == Listing.listing_id)
-        .join(Screen, Listing.screen_id == Screen.screen_id)
+        .outerjoin(Showing)
+        .outerjoin(Listing)
+        .outerjoin(Screen)
         .options(
             joinedload(Booking.booked_seats).joinedload(BookedSeat.seat),
             joinedload(Booking.showing).joinedload(Showing.listing).joinedload(Listing.film),
-            joinedload(Booking.showing).joinedload(Showing.listing).joinedload(Listing.screen),
+            joinedload(Booking.showing)
+            .joinedload(Showing.listing)
+            .joinedload(Listing.screen)
+            .joinedload(Screen.cinema),
         )
     )
 
-    if cinema_id:
+    if reference:
+        query = query.filter(Booking.booking_reference.ilike(f"%{reference}%"))
+    if cinema_id and cinema_id > 0:
         query = query.filter(Screen.cinema_id == cinema_id)
     if customer_name:
         query = query.filter(Booking.customer_name.ilike(f"%{customer_name}%"))
@@ -518,7 +527,7 @@ def search_bookings(
     if booking_date:
         query = query.filter(func.date(Booking.booking_date) == booking_date)
     if status:
-        query = query.filter(Booking.booking_status == status)
+        query = query.filter(Booking.booking_status.ilike(status))
     if booked_by:
         query = query.filter(Booking.booked_by == booked_by)
 

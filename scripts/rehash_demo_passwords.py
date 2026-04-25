@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-05-05
+# ============================================
+
 """
 scripts/rehash_demo_passwords.py
 Run once after seeding the database to replace the placeholder

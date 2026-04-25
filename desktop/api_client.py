@@ -78,23 +78,33 @@ class ApiClient:
     # Generic request helpers
     def get(self, path: str, params: dict = None) -> dict | list:
         resp = self._client.get(f"{self.base_url}{path}", headers=self._headers(), params=params)
-        resp.raise_for_status()
-        return resp.json()
+        return self._handle_response(resp)
 
     def post(self, path: str, json: dict = None) -> dict | list:
         resp = self._client.post(f"{self.base_url}{path}", headers=self._headers(), json=json)
-        resp.raise_for_status()
-        return resp.json()
+        return self._handle_response(resp)
 
     def patch(self, path: str, json: dict = None) -> dict | list:
         resp = self._client.patch(f"{self.base_url}{path}", headers=self._headers(), json=json)
-        resp.raise_for_status()
-        return resp.json()
+        return self._handle_response(resp)
 
     def delete(self, path: str) -> dict | list:
         resp = self._client.delete(f"{self.base_url}{path}", headers=self._headers())
-        resp.raise_for_status()
-        return resp.json()
+        return self._handle_response(resp)
+
+    def _handle_response(self, resp) -> dict | list:
+        """Helper to handle response status and parse JSON."""
+        if resp.status_code == 204:
+            return {}
+
+        try:
+            resp.raise_for_status()
+            if not resp.content:
+                return {}
+            return resp.json()
+        except Exception:
+            # Fallback for empty or non-JSON responses that didn't throw yet
+            return {}
 
     # Typed convenience methods
     # Films
@@ -132,6 +142,13 @@ class ApiClient:
         return self.delete(f"/films/listings/{listing_id}")
 
     # Bookings
+    def get_seat_map(self, showing_id: int, show_date: str, seat_type: str) -> dict:
+        return self.get("/bookings/seat-map", {
+            "showing_id": showing_id,
+            "show_date": show_date,
+            "seat_type": seat_type,
+        })
+
     def check_availability(self, data: dict) -> dict:
         return self.post("/bookings/check-availability", data)
 
@@ -247,6 +264,16 @@ class ApiClient:
 
     def get_ai_session_messages(self, session_id: int) -> list:
         return self.get(f"/ai/sessions/{session_id}/messages")
+
+    def delete_ai_session(self, session_id: int):
+        return self.delete(f"/ai/sessions/{session_id}")
+
+    def rename_ai_session(self, session_id: int, title: str) -> dict:
+        return self.patch(f"/ai/sessions/{session_id}", json={"title": title})
+
+    def get_ai_suggestions(self, session_id: Optional[int] = None) -> list[str]:
+        params = {"session_id": session_id} if session_id else {}
+        return self.get("/ai/suggestions", params=params)
 
 
 # Singleton instance — shared across all windows

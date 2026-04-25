@@ -1,11 +1,16 @@
+import time
 from typing import Dict, List, Optional
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal  # type: ignore
+from PyQt6.QtGui import QAction  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QMenu,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -60,8 +65,11 @@ class SuggestionChip(QPushButton):
 class SessionButton(QPushButton):
     """A button in the sidebar representing a chat session."""
 
+    rename_requested = pyqtSignal(int)
+    delete_requested = pyqtSignal(int)
+
     def __init__(self, session_id: int, title: str, callback: callable):
-        # Truncate title if long
+        self.full_title = title
         display_title = title if len(title) < 28 else title[:25] + "..."
         super().__init__(f"  {display_title}")
         self.session_id = session_id
@@ -103,24 +111,39 @@ class SessionButton(QPushButton):
         super().setChecked(checked)
         self._update_style(checked)
 
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        menu.setStyleSheet(
+            f"background-color: {BG_CARD}; color: {TEXT_PRIMARY}; border: 1px solid {BORDER};"
+        )
+
+        rename_act = QAction("Rename", self)
+        rename_act.triggered.connect(lambda: self.rename_requested.emit(self.session_id))
+        menu.addAction(rename_act)
+
+        delete_act = QAction("Delete", self)
+        delete_act.triggered.connect(lambda: self.delete_requested.emit(self.session_id))
+        menu.addAction(delete_act)
+
+        menu.exec(event.globalPos())
+
 
 class ChatBubble(QFrame):
-    """
-    A message bubble for the chat interface. Supports RichText (HTML).
-    """
+    """A message bubble for the chat interface. Supports RichText (HTML)."""
 
     def __init__(self, text: str, is_ai: bool = True):
         super().__init__()
-        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setContentsMargins(16, 10, 16, 10)
+        layout.setSpacing(4)
 
-        source_name = "HORIZON ASSISTANT" if is_ai else "YOU"
+        source_name = "HORIZON" if is_ai else "YOU"
         source = QLabel(source_name)
-        source.setFont(body_font(8))
+        source.setFont(body_font(8, bold=True))
         source.setStyleSheet(
-            f"color: {ACCENT if is_ai else TEXT_MUTED}; font-weight: bold; letter-spacing: 1.5px;"
+            f"color: {ACCENT if is_ai else TEXT_MUTED}; letter-spacing: 1.8px; background: transparent;"
         )
         layout.addWidget(source)
 
@@ -128,21 +151,29 @@ class ChatBubble(QFrame):
         self.content.setWordWrap(True)
         self.content.setFont(body_font(10))
         self.content.setTextFormat(Qt.TextFormat.RichText)
-        self.content.setStyleSheet(f"color: {TEXT_PRIMARY}; background: transparent;")
+        self.content.setStyleSheet(f"color: {TEXT_PRIMARY}; background: transparent; line-height: 1.5;")
         self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.content)
 
-        bg = "#1A1B1E" if is_ai else "#25262B"
-        border_color = BORDER_LIGHT if is_ai else BORDER
-        self.setStyleSheet(f"""
-            ChatBubble {{
-                background-color: {bg};
-                border: 1px solid {border_color};
-                border-radius: {RADIUS};
-                margin-top: 4px;
-                margin-bottom: 4px;
-            }}
-        """)
+        if is_ai:
+            self.setStyleSheet(f"""
+                ChatBubble {{
+                    background-color: #16171A;
+                    border: 1px solid {BORDER};
+                    border-left: 3px solid {ACCENT};
+                    border-radius: {RADIUS};
+                    margin: 2px 0px;
+                }}
+            """)
+        else:
+            self.setStyleSheet(f"""
+                ChatBubble {{
+                    background-color: #1E2025;
+                    border: 1px solid {BORDER_LIGHT};
+                    border-radius: {RADIUS};
+                    margin: 2px 32px 2px 0px;
+                }}
+            """)
 
     def set_text(self, text: str):
         self.content.setText(text)
@@ -181,6 +212,7 @@ class AIInsightsView(QWidget):
         self.thinking_timer = QTimer()
         self.thinking_timer.timeout.connect(self._update_thinking_dots)
         self.dot_count = 0
+        self._last_suggestions_fetch: float = 0.0
 
         self._build_ui()
         # Load sessions on startup
@@ -197,7 +229,7 @@ class AIInsightsView(QWidget):
         sidebar.setStyleSheet(f"background-color: {BG_DARK}; border-right: 1px solid {BORDER};")
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(12, 12, 12, 12)
-        sidebar_layout.setSpacing(16)
+        sidebar_layout.setSpacing(12)
 
         # New Chat Button
         new_chat_btn = QPushButton("+  New Chat")
@@ -218,6 +250,22 @@ class AIInsightsView(QWidget):
         """)
         new_chat_btn.clicked.connect(self._start_new_chat)
         sidebar_layout.addWidget(new_chat_btn)
+
+        # Search Bar
+        self.search_field = QLineEdit()
+        self.search_field.setPlaceholderText("Search chats...")
+        self.search_field.setFont(body_font(9))
+        self.search_field.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {BG_DARKEST};
+                color: {TEXT_PRIMARY};
+                border: 1px solid {BORDER};
+                border-radius: 4px;
+                padding: 4px 8px;
+            }}
+        """)
+        self.search_field.textChanged.connect(self._on_search_changed)
+        sidebar_layout.addWidget(self.search_field)
 
         # Session List
         sidebar_layout.addWidget(QLabel("PAST CONVERSATIONS"), 0, Qt.AlignmentFlag.AlignLeft)
@@ -271,23 +319,32 @@ class AIInsightsView(QWidget):
         self.suggestions_row.setSpacing(0)
         self.suggestions_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        suggestions = ["Weekly Revenue", "Staff Performance", "Occupancy Rate", "Top Films"]
-        for s in suggestions:
-            chip = SuggestionChip(s, self._on_suggestion_clicked)
-            self.suggestions_row.addWidget(chip)
+        # Initial chips (will be dynamic)
+        self._set_suggestion_chips(
+            ["Weekly Revenue", "Staff Performance", "Occupancy Rate", "Top Films"]
+        )
+
         chat_vbox.addLayout(self.suggestions_row)
 
         # Input
         input_frame = QFrame()
-        input_frame.setFixedHeight(80)
-        input_frame.setStyleSheet(
-            f"background-color: {BG_CARD}; border: 1px solid {BORDER}; border-radius: {RADIUS};"
-        )
+        input_frame.setFixedHeight(60)
+        input_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {BG_CARD};
+                border: 1px solid {BORDER_LIGHT};
+                border-radius: 8px;
+            }}
+            QFrame:focus-within {{
+                border-color: {ACCENT};
+            }}
+        """)
         input_layout = QHBoxLayout(input_frame)
-        input_layout.setContentsMargins(12, 12, 12, 12)
+        input_layout.setContentsMargins(14, 10, 10, 10)
+        input_layout.setSpacing(8)
 
         self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText("Ask your cinema data a question...")
+        self.input_field.setPlaceholderText("Ask about bookings, revenue, staff, films...")
         self.input_field.setFont(body_font(11))
         self.input_field.setStyleSheet(
             "QLineEdit { border: none; background: transparent; color: white; }"
@@ -295,17 +352,19 @@ class AIInsightsView(QWidget):
         self.input_field.returnPressed.connect(self._send_query)
         input_layout.addWidget(self.input_field, 1)
 
-        self.send_btn = QPushButton("Send")
-        self.send_btn.setFixedSize(80, 40)
+        self.send_btn = QPushButton("Send →")
+        self.send_btn.setFixedSize(90, 38)
         self.send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.send_btn.setFont(body_font(10, bold=True))
         self.send_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {ACCENT};
                 color: {WHITE};
-                border-radius: 4px;
+                border-radius: 6px;
+                border: none;
             }}
             QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
+            QPushButton:disabled {{ background-color: #4A1010; color: #7A4040; }}
         """)
         self.send_btn.clicked.connect(self._send_query)
         input_layout.addWidget(self.send_btn)
@@ -313,7 +372,7 @@ class AIInsightsView(QWidget):
         chat_vbox.addWidget(input_frame)
         root_layout.addWidget(chat_area, 1)
 
-    # ─── Data Logic ───
+    # Data Logic
 
     def _load_sessions(self):
         """Fetch all sessions for the user and populate the sidebar."""
@@ -327,16 +386,18 @@ class AIInsightsView(QWidget):
 
             for s in sessions:
                 btn = SessionButton(s["session_id"], s["title"], self._on_session_selected)
+                btn.rename_requested.connect(self._handle_rename)
+                btn.delete_requested.connect(self._handle_delete)
                 self.session_list_layout.addWidget(btn)
                 self.session_buttons.append(btn)
 
             if sessions and self.current_session_id is None:
-                # Select latest if nothing active
                 self._on_session_selected(sessions[0]["session_id"])
             elif self.current_session_id:
-                # Re-highlight active
                 for btn in self.session_buttons:
                     btn.setChecked(btn.session_id == self.current_session_id)
+            elif not sessions:
+                self._on_session_selected(0)
         except Exception:
             pass
 
@@ -352,34 +413,99 @@ class AIInsightsView(QWidget):
 
     def _on_session_selected(self, session_id: int):
         """Load history for a specific session."""
-        self.current_session_id = session_id
-        for btn in self.session_buttons:
-            btn.setChecked(btn.session_id == session_id)
-            if btn.session_id == session_id:
-                self.title_label.setText(btn.text().strip())
-
         # Clear chat container
         while self.chat_layout.count():
             item = self.chat_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
+        self.history = []
+
+        # Invalid/deleted session — show empty state
+        if session_id <= 0:
+            self.current_session_id = None
+            self.title_label.setText("Horizon Assistant")
+            self._show_empty_state()
+            return
+
+        self.current_session_id = session_id
+        for btn in self.session_buttons:
+            btn.setChecked(btn.session_id == session_id)
+            if btn.session_id == session_id:
+                self.title_label.setText(btn.full_title)
+
         # Load messages
         try:
             messages = api.get_ai_session_messages(session_id)
-            self.history = []
             if not messages:
-                self._add_message("Hello! Start by asking a question about your cinema data.", True)
+                self._show_empty_state()
             else:
                 for msg in messages:
                     self._add_message(msg["content"], msg["role"] == "assistant")
                     self.history.append({"role": msg["role"], "content": msg["content"]})
+
         except Exception:
             self._add_message("Failed to load conversation history.", True)
+
+    def _show_empty_state(self):
+        """Show a welcome prompt in an empty chat."""
+        welcome = QLabel(
+            "<b style='font-size:13pt;'>How can I help?</b><br>"
+            "<span style='color:#9CA3AF;font-size:10pt;'>"
+            "Ask me anything about your cinema — bookings, revenue, staff, films."
+            "</span>"
+        )
+        welcome.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        welcome.setTextFormat(Qt.TextFormat.RichText)
+        welcome.setWordWrap(True)
+        welcome.setStyleSheet("color: white; background: transparent; padding: 40px;")
+        self.chat_layout.addWidget(welcome)
 
     def _on_suggestion_clicked(self, text: str):
         self.input_field.setText(text)
         self._send_query()
+
+    def _on_search_changed(self, text: str):
+        search_text = text.lower()
+        for btn in self.session_buttons:
+            btn.setVisible(search_text in btn.full_title.lower())
+
+    def _handle_rename(self, session_id: int):
+        # find current title
+        current_title = ""
+        for btn in self.session_buttons:
+            if btn.session_id == session_id:
+                current_title = btn.full_title
+                break
+
+        new_title, ok = QInputDialog.getText(
+            self, "Rename Chat", "Enter new title:", text=current_title
+        )
+        if ok and new_title.strip():
+            try:
+                api.rename_ai_session(session_id, new_title.strip())
+                self._load_sessions()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to rename: {str(e)}")
+
+    def _handle_delete(self, session_id: int):
+        confirm = QMessageBox.question(
+            self,
+            "Delete Chat",
+            "Are you sure you want to delete this conversation?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if confirm == QMessageBox.StandardButton.Yes:
+            try:
+                api.delete_ai_session(session_id)
+                if self.current_session_id == session_id:
+                    self.current_session_id = None
+                    self.history = []
+                    # Clear chat UI
+                    self._on_session_selected(-1)  # Trigger empty state
+                self._load_sessions()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to delete: {str(e)}")
 
     def _send_query(self):
         query = self.input_field.text().strip()
@@ -415,7 +541,6 @@ class AIInsightsView(QWidget):
         self.history.append({"role": "assistant", "content": answer})
 
         # If it was the first message, the title might have changed in DB
-        # Re-fetch sessions to see new title
         if len(self.history) <= 2:
             self._load_sessions()
 
@@ -423,15 +548,46 @@ class AIInsightsView(QWidget):
         self.send_btn.setEnabled(True)
         self.input_field.setFocus()
 
+        # Refresh dynamic suggestions after each turn
+        self._fetch_suggestions()
+
     def _on_query_error(self, error: str):
         self._hide_thinking()
         self._add_message(f"<b>Error:</b> {error}", True)
         self.input_field.setEnabled(True)
         self.send_btn.setEnabled(True)
 
+    def _fetch_suggestions(self):
+        """Fetch dynamic suggestions — at most once every 20 seconds."""
+        if time.time() - self._last_suggestions_fetch < 20:
+            return
+        self._last_suggestions_fetch = time.time()
+        QTimer.singleShot(300, self._do_fetch_suggestions)
+
+    def _do_fetch_suggestions(self):
+        try:
+            suggestions = api.get_ai_suggestions(self.current_session_id)
+            if suggestions:
+                self._set_suggestion_chips(suggestions)
+        except Exception:
+            pass
+
+    def _set_suggestion_chips(self, suggestions: List[str]):
+        # Clear row
+        while self.suggestions_row.count():
+            item = self.suggestions_row.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        for s in suggestions[:4]:
+            chip = SuggestionChip(s, self._on_suggestion_clicked)
+            self.suggestions_row.addWidget(chip)
+
     # ─── Helpers ───
 
     def _add_message(self, text: str, is_ai: bool):
+        if not text:
+            return
         bubble = ChatBubble(text, is_ai)
         self.chat_layout.addWidget(bubble)
         QTimer.singleShot(
@@ -442,15 +598,22 @@ class AIInsightsView(QWidget):
         )
 
     def _show_thinking(self):
-        self.thinking_bubble = ChatBubble("...", True)
+        self.thinking_bubble = ChatBubble("Thinking...", True)
         self.chat_layout.addWidget(self.thinking_bubble)
+        QTimer.singleShot(
+            50,
+            lambda: self.scroll.verticalScrollBar().setValue(
+                self.scroll.verticalScrollBar().maximum()
+            ),
+        )
         self.dot_count = 0
-        self.thinking_timer.start(400)
+        self.thinking_timer.start(500)
 
     def _update_thinking_dots(self):
         if self.thinking_bubble:
-            self.dot_count = (self.dot_count + 1) % 4
-            self.thinking_bubble.set_text("." * self.dot_count)
+            self.dot_count = (self.dot_count + 1) % 3
+            dots = "." * (self.dot_count + 1)
+            self.thinking_bubble.set_text(f"Thinking{dots}")
 
     def _hide_thinking(self):
         self.thinking_timer.stop()

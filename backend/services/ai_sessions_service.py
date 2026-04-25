@@ -55,3 +55,11 @@ def update_session_title(db: Session, session_id: int, title: str):
     if session:
         session.title = title
         db.commit()
+
+
+def delete_session(db: Session, session_id: int):
+    """Deletes a chat session and all its messages."""
+    session = db.query(AIChatSession).filter(AIChatSession.session_id == session_id).first()
+    if session:
+        db.delete(session)
+        db.commit()

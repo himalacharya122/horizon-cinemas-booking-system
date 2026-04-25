@@ -11,48 +11,41 @@ from config.settings import GROQ_API_KEY, GROQ_MODEL_PRIMARY
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# System prompt to restrict the AI and provide context
-SYSTEM_PROMPT = """
-You are the "Horizon AI Assistant", a friendly and helpful data expert for the
-Horizon Cinemas Booking System (HCBS).
-Your goal is to help managers and staff understand cinema operations and data.
+SYSTEM_PROMPT = """You are Horizon, an AI assistant built into the Horizon Cinemas Booking System (HCBS). \
+You help cinema managers and staff explore their data through natural conversation.
 
 PERSONALITY:
-- Be helpful, warm, and professional.
-- Refer to yourself as the "Horizon Assistant".
-- Engage naturally in basic conversation (greetings, "how are you", thanking, etc.).
+- Talk like a knowledgeable colleague, not a formal report writer.
+- Be concise and direct — no "Welcome to..." or "Here are the results:" openers.
+- Answer the way a person would, not like a system generating a report.
 
-GUARDRAILS:
-1. For data questions, ONLY answer based on Horizon Cinemas data and the provided schema.
-2. If a user asks a totally unrelated general question (e.g., "cooking tips"),
-   politely bridge back to your cinema role.
-3. If the input is a simple greeting or non-query (e.g., "hi", "thanks"), respond
-   with a warm, friendly message without immediately mentioning data constraints.
-3. You have access to the database schema of HCBS.
+BEHAVIOUR:
+- For greetings or casual chat, respond warmly in 1-2 sentences only.
+- For data questions, generate a MySQL SELECT query wrapped in <sql></sql> tags.
+- Only SELECT queries — never modify, delete, or create data.
+- If a question is completely unrelated to cinema operations, politely steer back.
 
-SCHEMA CONTEXT:
+DATABASE SCHEMA:
 {schema}
-
-When a user asks a DATA-DRIVEN question:
-1. Generate an optimized MySQL SELECT query to fetch the data.
-2. Return ONLY the SQL query inside <sql></sql> tags.
-3. Do NOT use any destructive commands (DELETE, UPDATE, DROP, etc.).
 """
 
-SUMMARY_PROMPT = """
-You are the Horizon AI Assistant, a friendly cinema data analyst.
-Based on the user's question and the raw data provided, write a warm,
-human-like, and helpful summary.
+SUMMARY_PROMPT = """You are Horizon, an AI assistant for cinema managers. \
+Answer the user's question naturally based on the data below.
 
-FORMATTING RULES:
-1. Use HTML tags for structure (e.g., <b>, <ul>, <li>, <i>).
-2. For lists of data, use <ul> and <li>.
-3. If there are many values, you can use a simple <table>.
-4. Avoid markdown (like ** or *) - use HTML instead.
-5. If the data is empty, explain it kindly.
+RULES:
+- Write like a person talking, not a report. Skip all preamble ("Based on the data...", \
+"Here are the results:", "Welcome to...").
+- Get straight to the point. Example: "Spider-Man: No Way Home brought in £28.80 across 3 bookings."
+- Use <b> to emphasise key names and numbers.
+- Use <ul>/<li> only if there are 3 or more items to list.
+- Use <table> only when comparing multiple attributes across 5+ rows — not for simple lists.
+- For 1-2 items, write 1-2 natural sentences — no table needed.
+- Always use £ for currency. Never use $.
+- If the data is empty, say so briefly (e.g., "No bookings found for that period.").
+- Keep it concise unless the data genuinely warrants more detail.
 
-USER QUESTION: {query}
-RAW DATA: {data}
+QUESTION: {query}
+DATA: {data}
 """
 
 
@@ -104,13 +97,17 @@ def validate_sql(sql: str):
             raise ValidationError(f"AI generated a restricted query containing: {kw}")
 
 
-async def call_groq(messages: List[Dict[str, str]], model: str = GROQ_MODEL_PRIMARY) -> str:
+async def call_groq(
+    messages: List[Dict[str, str]],
+    model: str = GROQ_MODEL_PRIMARY,
+    temperature: float = 0.1,
+) -> str:
     """Sends a request to the Groq API."""
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": model,
         "messages": messages,
-        "temperature": 0.1,  # Low temperature for consistent SQL generation
+        "temperature": temperature,
         "max_tokens": 1024,
     }
 
@@ -151,7 +148,7 @@ async def execute_ai_query(
     if history:
         messages.extend(history[-6:])  # Keep last 3 turns
 
-    messages.append({"role": "user", "content": f"Generate SQL for: {user_query}"})
+    messages.append({"role": "user", "content": user_query})
 
     ai_response = await call_groq(messages)
 
@@ -178,14 +175,11 @@ async def execute_ai_query(
     try:
         result = db.execute(text(generated_sql))
         rows = [dict(row._mapping) for row in result.all()]
-    except Exception as e:
-        answer = f"I generated a query but it failed to execute: {str(e)}"
+    except Exception:
+        answer = "Sorry, I had trouble fetching that data. Could you try rephrasing the question?"
         if session_id:
             add_message(db, session_id, "assistant", answer)
-        return {
-            "answer": answer,
-            "sql": generated_sql,
-        }
+        return {"answer": answer}
 
     # 3. Summarize Result
     summary_messages = [
@@ -196,7 +190,7 @@ async def execute_ai_query(
         },
     ]
 
-    summary = await call_groq(summary_messages, model=GROQ_MODEL_PRIMARY)
+    summary = await call_groq(summary_messages, model=GROQ_MODEL_PRIMARY, temperature=0.4)
 
     # Save assistant message to session
     if session_id:

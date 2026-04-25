@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/v1/endpoints/bookings.py
 Booking creation, cancellation, lookup, and availability checking.
@@ -130,6 +136,7 @@ def search_bookings(
     booking_date: Optional[date] = Query(default=None),
     status: Optional[str] = Query(default=None),
     booked_by: Optional[int] = Query(default=None),
+    reference: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
     _user: dict = Depends(get_current_user),
 ):
@@ -144,6 +151,7 @@ def search_bookings(
         customer_phone=customer_phone,
         booked_by=booked_by,
         booking_date=booking_date,
+        reference=reference,
     )
     return [_serialise_booking(b) for b in bookings]
 

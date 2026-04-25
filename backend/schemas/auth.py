@@ -1,3 +1,9 @@
+# ============================================
+# Author: Smriti Ale
+# Student ID: 24036547
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/schemas/auth.py
 Pydantic models for authentication requests and responses.

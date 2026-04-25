@@ -1,3 +1,9 @@
+# ============================================
+# Author: Smriti Ale
+# Student ID: 24036547
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/profile_view.py
 implements the Profile view for Booking Staff to view personal account details and manage security settings.

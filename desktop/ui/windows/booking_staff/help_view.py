@@ -1,3 +1,9 @@
+# ============================================
+# Author: Smriti Ale
+# Student ID: 24036547
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/help_view.py
 implements the Help & Guide view providing instructional content and administrative contact information.

@@ -28,3 +28,7 @@ class AIQueryRequest(BaseModel):
     query: str
     session_id: Optional[int] = None
     history: Optional[List[dict]] = None
+
+
+class AISessionUpdate(BaseModel):
+    title: str

@@ -18,7 +18,7 @@ engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,  # reconnect on stale connections
     pool_size=10,
-    max_overflow=20,
+    max_overflow=20,            
     echo=False,  # set True to log all SQL
 )
 

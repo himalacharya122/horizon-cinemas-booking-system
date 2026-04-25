@@ -19,10 +19,27 @@ from backend.schemas.booking import (
     BookingOut,
     CancelRequest,
     CancelResponse,
+    SeatMapResponse,
 )
 from backend.services import booking_service
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
+
+
+# Seat map
+@router.get("/seat-map", response_model=SeatMapResponse)
+def get_seat_map(
+    showing_id: int = Query(...),
+    show_date: date = Query(...),
+    seat_type: str = Query(...),
+    db: Session = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    """Return all seats of a given type with their live availability status."""
+    try:
+        return booking_service.get_seat_map(db, showing_id, show_date, seat_type)
+    except HCBSException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 # Availability check

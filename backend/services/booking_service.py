@@ -153,6 +153,102 @@ def check_availability(
     }
 
 
+# Seat map
+def get_seat_map(
+    db: Session,
+    showing_id: int,
+    show_date: date,
+    seat_type: str,
+) -> dict:
+    """Return all seats of the requested type with their availability status."""
+    showing = (
+        db.query(Showing)
+        .options(joinedload(Showing.listing).joinedload(Listing.screen))
+        .filter(Showing.showing_id == showing_id, Showing.is_active == True)  # noqa: E712
+        .first()
+    )
+    if not showing:
+        raise NotFoundError("Showing")
+
+    screen = showing.listing.screen
+
+    all_seats = (
+        db.query(Seat)
+        .filter(Seat.screen_id == screen.screen_id, Seat.seat_type == seat_type)
+        .order_by(Seat.row_label, Seat.seat_number)
+        .all()
+    )
+
+    booked_seat_ids = set(
+        row[0]
+        for row in db.query(BookedSeat.seat_id)
+        .join(Booking, BookedSeat.booking_id == Booking.booking_id)
+        .filter(
+            Booking.showing_id == showing_id,
+            Booking.show_date == show_date,
+            Booking.booking_status == "confirmed",
+        )
+        .all()
+    )
+
+    return {
+        "seats": [
+            {
+                "seat_id": s.seat_id,
+                "seat_number": s.seat_number,
+                "row_label": s.row_label,
+                "seat_type": s.seat_type,
+                "is_available": s.seat_id not in booked_seat_ids,
+            }
+            for s in all_seats
+        ],
+        "showing_id": showing_id,
+        "show_date": show_date,
+        "seat_type": seat_type,
+    }
+
+
+# Validate and fetch specific seats chosen by staff
+def _get_seats_by_ids(
+    db: Session,
+    screen_id: int,
+    showing_id: int,
+    show_date: date,
+    seat_type: str,
+    seat_ids: list[int],
+) -> list[Seat]:
+    seats = (
+        db.query(Seat)
+        .filter(
+            Seat.seat_id.in_(seat_ids),
+            Seat.screen_id == screen_id,
+            Seat.seat_type == seat_type,
+        )
+        .all()
+    )
+
+    if len(seats) != len(seat_ids):
+        raise BookingError("One or more selected seats are invalid for this screen/type")
+
+    booked_seat_ids = set(
+        row[0]
+        for row in db.query(BookedSeat.seat_id)
+        .join(Booking, BookedSeat.booking_id == Booking.booking_id)
+        .filter(
+            Booking.showing_id == showing_id,
+            Booking.show_date == show_date,
+            Booking.booking_status == "confirmed",
+        )
+        .all()
+    )
+
+    for seat in seats:
+        if seat.seat_id in booked_seat_ids:
+            raise BookingError(f"Seat {seat.seat_number} has just been booked by someone else")
+
+    return seats
+
+
 # Find available seats
 def _find_available_seats(
     db: Session,
@@ -252,10 +348,20 @@ def create_booking(db: Session, data: dict, booked_by: int) -> Booking:
 
     screen = listing.screen
 
-    # Get available seats
-    seats = _find_available_seats(
-        db, screen.screen_id, showing_id, show_date, seat_type, num_tickets
-    )
+    # Get seats — use staff-selected IDs if provided, otherwise auto-assign
+    seat_ids = data.get("seat_ids")
+    if seat_ids:
+        if len(seat_ids) != num_tickets:
+            raise BookingError(
+                f"Selected {len(seat_ids)} seat(s) but num_tickets is {num_tickets}"
+            )
+        seats = _get_seats_by_ids(
+            db, screen.screen_id, showing_id, show_date, seat_type, seat_ids
+        )
+    else:
+        seats = _find_available_seats(
+            db, screen.screen_id, showing_id, show_date, seat_type, num_tickets
+        )
 
     # Calculate price
     unit_price = get_price_for_showing(db, showing, seat_type)

@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 

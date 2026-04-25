@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/report_service.py
 Admin report queries: revenue, top films, staff booking counts, etc.

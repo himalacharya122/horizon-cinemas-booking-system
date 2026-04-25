@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/manager/create_staff.py
 implements the Manager view for creating and registering new staff user accounts.

@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/admin/manage_pricing.py
 implements the ticket pricing management interface for Administrators to adjust cinema-specific rates.

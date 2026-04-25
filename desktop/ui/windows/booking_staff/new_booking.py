@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/new_booking.py
 implements the New Booking interface for Booking Staff.

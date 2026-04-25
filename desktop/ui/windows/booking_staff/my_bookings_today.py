@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/my_bookings_today.py
 implements the My Bookings Today view for Booking Staff.

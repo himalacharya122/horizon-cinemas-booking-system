@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/manager/manage_cinemas.py
 implements the Manager view for registering new cinemas, adding screens, and configuring base ticket pricing.

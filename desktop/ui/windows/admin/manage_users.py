@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/admin/manage_users.py
 implements the staff user management interface for Administrators to audit account activity and manage security credentials.

@@ -158,7 +158,7 @@ INSERT INTO base_prices (city_id, show_period, lower_hall_price) VALUES
 (4, 'afternoon', 11.00),
 (4, 'evening',   12.00);
 
--- FILMS  (genre must be a single ENUM value; release_date not release_year)
+-- FILMS
 INSERT INTO films (title, description, genre, age_rating, duration_mins, release_date, imdb_rating, cast_list, director) VALUES
 ('Top Gun: Maverick',
  'After more than thirty years of service as one of the Navy''s top aviators, Maverick pushes the envelope as a courageous test pilot.',
@@ -188,72 +188,146 @@ INSERT INTO films (title, description, genre, age_rating, duration_mins, release
 ('Barbie',
  'Barbie and Ken are having the time of their lives in Barbie Land. When they get a chance to go to the real world, things get complicated.',
  'Comedy', 'PG-13', 114, '2023-07-21', 6.9,
- 'Margot Robbie, Ryan Gosling, America Ferrera', 'Greta Gerwig');
+ 'Margot Robbie, Ryan Gosling, America Ferrera', 'Greta Gerwig'),
 
--- LISTINGS  (films → screens for a date range)
--- screen_id references: Bristol Cabot = 6,7,8,9  |  London Leic Sq = 17,18
--- created_by must be admin or manager user_id
+('Dune: Part Two',
+ 'Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.',
+ 'Action', '12A', 166, '2024-03-01', 8.6,
+ 'Timothée Chalamet, Zendaya, Rebecca Ferguson', 'Denis Villeneuve'),
+
+('Poor Things',
+ 'The incredible tale and fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.',
+ 'Comedy', '18', 141, '2023-12-08', 7.9,
+ 'Emma Stone, Mark Ruffalo, Willem Dafoe', 'Yorgos Lanthimos'),
+
+('John Wick: Chapter 4',
+ 'John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy.',
+ 'Action', '15', 169, '2023-03-24', 7.7,
+ 'Keanu Reeves, Laurence Fishburne, George Georgiou', 'Chad Stahelski'),
+
+('Wonka',
+ 'With dreams of opening a shop in a city renowned for its chocolate, a young and poor Willy Wonka discovers that the industry is run by a cartel of greedy chocolatiers.',
+ 'Comedy', 'PG', 116, '2023-12-08', 7.0,
+ 'Timothée Chalamet, Gustave Die, Murray McArthur', 'Paul King'),
+
+('Killers of the Flower Moon',
+ 'Real-life members of the Osage Nation in the United States are murdered under mysterious circumstances in the 1920s.',
+ 'Drama', '15', 206, '2023-10-20', 7.6,
+ 'Leonardo DiCaprio, Robert De Niro, Lily Gladstone', 'Martin Scorsese');
+
+-- LISTINGS  (films → screens)
 INSERT INTO listings (film_id, screen_id, start_date, end_date, created_by) VALUES
-(1,  6, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 6),   -- Top Gun → Bristol Cabot screen 1
-(2,  7, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 6),   -- Spider-Man → Bristol Cabot screen 2
-(3,  8, CURDATE(), DATE_ADD(CURDATE(), INTERVAL  7 DAY), 6),   -- The Batman → Bristol Cabot screen 3
-(5, 17, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 8),   -- Oppenheimer → London Leic Sq screen 1
-(6, 18, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 8);   -- Barbie → London Leic Sq screen 2
+-- Existing listings (Bristol/London)
+(1,  6, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 6),
+(2,  7, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 6),
+(3,  8, CURDATE(), DATE_ADD(CURDATE(), INTERVAL  7 DAY), 6),
+(5, 17, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 8),
+(6, 18, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 8),
 
--- SHOWINGS  (show_type column is required by schema)
--- morning 08:00-11:59 | afternoon 12:00-16:59 | evening 17:00-23:59
+-- New listings (Birmingham/Cardiff/Canary Wharf)
+(7,  1, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 21 DAY), 5),   -- Dune → Birmingham Central S1
+(8,  2, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 5),   -- Poor Things → Birmingham Central S2
+(9, 12, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 7),   -- John Wick → Cardiff Central S1
+(10, 13, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 21 DAY), 7),  -- Wonka → Cardiff Central S2
+(11, 22, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 8),  -- Killers → London Canary Wharf S1
+(4,  4, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 5);   -- EEAAO → Birmingham Solihull S1
+
+-- SHOWINGS
 INSERT INTO showings (listing_id, show_time, show_type) VALUES
--- Top Gun: Maverick — 3 shows
+-- Top Gun: Maverick (Listing 1)
 (1, '10:00:00', 'morning'),
 (1, '14:00:00', 'afternoon'),
 (1, '18:00:00', 'evening'),
--- Spider-Man — 3 shows
+-- Spider-Man (Listing 2)
 (2, '10:00:00', 'morning'),
 (2, '14:00:00', 'afternoon'),
 (2, '18:00:00', 'evening'),
--- The Batman — 2 shows
+-- The Batman (Listing 3)
 (3, '12:00:00', 'afternoon'),
 (3, '19:30:00', 'evening'),
--- Oppenheimer — 2 shows
+-- Oppenheimer (Listing 4)
 (4, '11:00:00', 'morning'),
 (4, '17:30:00', 'evening'),
--- Barbie — 3 shows
+-- Barbie (Listing 5)
 (5, '10:30:00', 'morning'),
 (5, '13:00:00', 'afternoon'),
-(5, '16:00:00', 'afternoon');
+(5, '16:00:00', 'afternoon'),
+-- Dune: Part Two (Listing 6)
+(6, '11:00:00', 'morning'),
+(6, '15:00:00', 'afternoon'),
+(6, '20:00:00', 'evening'),
+-- Poor Things (Listing 7)
+(7, '12:30:00', 'afternoon'),
+(7, '18:30:00', 'evening'),
+-- John Wick (Listing 8)
+(8, '11:00:00', 'morning'),
+(8, '17:00:00', 'evening'),
+-- Wonka (Listing 9)
+(9, '10:00:00', 'morning'),
+(9, '13:30:00', 'afternoon'),
+-- Killers (Listing 10)
+(10, '14:00:00', 'afternoon'),
+(10, '19:00:00', 'evening'),
+-- EEAAO (Listing 11)
+(11, '11:00:00', 'morning'),
+(11, '18:00:00', 'evening');
 
 -- SAMPLE BOOKINGS
--- Bristol evening lower_hall_price = £8.00
--- Upper gallery = £8.00 × 1.20 = £9.60
--- VIP           = £9.60 × 1.20 = £11.52
--- Bristol morning lower = £6.00, upper = £7.20, VIP = £8.64
+-- FUTURE BOOKINGS
 INSERT INTO bookings (booking_reference, showing_id, show_date, booked_by,
                       customer_name, customer_phone, customer_email,
-                      num_tickets, total_cost, booking_status) VALUES
+                      num_tickets, total_cost, booking_status, booking_date) VALUES
 ('HC-2025-00001', 3,  DATE_ADD(CURDATE(), INTERVAL 2 DAY), 11,
- 'Alice Thompson', '07700900001', 'alice.t@email.com',  2, 16.00, 'confirmed'),
+ 'Alice Thompson', '07700900001', 'alice.t@email.com',  2, 16.00, 'confirmed', CURRENT_TIMESTAMP),
 ('HC-2025-00002', 6,  DATE_ADD(CURDATE(), INTERVAL 3 DAY), 11,
- 'Bob Patel',      '07700900002', 'bob.p@email.com',    3, 28.80, 'confirmed'),
+ 'Bob Patel',      '07700900002', 'bob.p@email.com',    3, 28.80, 'confirmed', CURRENT_TIMESTAMP),
 ('HC-2025-00003', 1,  DATE_ADD(CURDATE(), INTERVAL 1 DAY),  9,
- 'Carol White',    '07700900003', 'carol.w@email.com',  1,  8.64, 'confirmed');
+ 'Carol White',    '07700900003', 'carol.w@email.com',  1,  8.64, 'confirmed', CURRENT_TIMESTAMP),
 
--- BOOKED SEATS  (uses seat_id FK — NOT raw seat_number)
--- We look up seat_id dynamically from the seats table.
+-- HISTORICAL BOOKINGS (Fixed: booking_date set to before show_date)
+('HC-2025-H0001', 3,  DATE_SUB(CURDATE(), INTERVAL 1 DAY), 11,
+ 'Daniel Green', '07700900004', 'd.green@email.com',  2, 16.00, 'confirmed', DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY)),
+('HC-2025-H0002', 6,  DATE_SUB(CURDATE(), INTERVAL 1 DAY), 11,
+ 'Elena Rose',   '07700900005', 'e.rose@email.com',   1, 9.60,  'confirmed', DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY)),
+('HC-2025-H0003', 18, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 9,
+ 'Frankie J.',   '07700900006', 'f.j@email.com',      4, 32.00, 'confirmed', DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY)),
+('HC-2025-H0004', 21, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 13,
+ 'George B.',    '07700900007', 'g.b@email.com',      2, 24.00, 'confirmed', DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 6 DAY)),
+('HC-2025-H0005', 25, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 13,
+ 'Hannah Lee',   '07700900008', 'h.lee@email.com',     3, 30.00, 'confirmed', DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 4 DAY));
 
+-- BOOKED SEATS
 -- Booking 1 (Alice): 2 × evening lower hall on screen 6 (Bristol Cabot screen 1)
---   Seats L1, L2 on screen_id 6  →  lower_hall @ £8.00 each
 INSERT INTO booked_seats (booking_id, seat_id, unit_price)
 SELECT 1, seat_id, 8.00
 FROM seats WHERE screen_id = 6 AND seat_number IN ('L1', 'L2');
 
 -- Booking 2 (Bob): 3 × evening upper gallery on screen 7 (Bristol Cabot screen 2)
---   Seats U1, U2, U3 on screen_id 7  →  upper_gallery @ £9.60 each
 INSERT INTO booked_seats (booking_id, seat_id, unit_price)
 SELECT 2, seat_id, 9.60
 FROM seats WHERE screen_id = 7 AND seat_number IN ('U1', 'U2', 'U3');
 
 -- Booking 3 (Carol): 1 × morning VIP on screen 6 (Bristol Cabot screen 1)
---   Seat VIP-1 on screen_id 6  →  vip @ £8.64
 INSERT INTO booked_seats (booking_id, seat_id, unit_price)
 SELECT 3, seat_id, 8.64
 FROM seats WHERE screen_id = 6 AND seat_number = 'VIP-1';
+
+-- Booking 4 (Daniel): 2 × evening lower hall on screen 6
+INSERT INTO booked_seats (booking_id, seat_id, unit_price)
+SELECT 4, seat_id, 8.00
+FROM seats WHERE screen_id = 6 AND seat_number IN ('L3', 'L4');
+
+-- Booking 5 (Elena): 1 × evening upper gallery on screen 7
+INSERT INTO booked_seats (booking_id, seat_id, unit_price)
+SELECT 5, seat_id, 9.60
+FROM seats WHERE screen_id = 7 AND seat_number = 'U4';
+
+-- Booking 6 (Frankie): 4 × afternoon lower hall on screen 1 (Birmingham Central)
+INSERT INTO booked_seats (booking_id, seat_id, unit_price)
+SELECT 6, seat_id, 6.00
+FROM seats WHERE screen_id = 1 AND seat_number IN ('L1', 'L2', 'L3', 'L4');
+
+-- Booking 7 (George): 2 × evening upper gallery on screen 12 (Cardiff Central)
+INSERT INTO booked_seats (booking_id, seat_id, unit_price)
+SELECT 7, seat_id, 8.40
+FROM seats WHERE screen_id = 12 AND seat_number IN ('U1', 'U2');

@@ -20,7 +20,8 @@ from config.settings import API_HOST, API_PORT
 class ApiClient:
     """
     thin wrapper around httpx that manages authentication and provides typed helper methods.
-    it stores the JWT token after login and attaches it to the Authorization header of every request.
+    it stores the JWT token after login and attaches it to the Authorization header of every
+    request.
     """
 
     def __init__(self):

@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/booking_staff/help_view.py
-implements the Help & Guide view providing instructional content and administrative contact information.
+implements the Help & Guide view providing instructional content and administrative contact
+information.
 """
 
 from PyQt6.QtWidgets import (  # type: ignore
@@ -41,7 +42,9 @@ class HelpView(QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        """constructs the primary layout featuring a QTabWidget for Guide and Contact sections."""
+        """constructs the primary layout featuring a QTabWidget for Guide and Contact
+        sections.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -138,7 +141,9 @@ class HelpView(QWidget):
         return scroll
 
     def _build_contact_tab(self) -> QScrollArea:
-        """constructs a scrollable area containing administrative support contact information."""
+        """constructs a scrollable area containing administrative support contact
+        information.
+        """
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")

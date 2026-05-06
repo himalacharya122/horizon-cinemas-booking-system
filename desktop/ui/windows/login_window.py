@@ -168,7 +168,9 @@ class _RoleTabs(QWidget):
 
 
 class LoginWindow(QWidget):
-    """the primary login interface for the application, handling user authentication and role verification."""
+    """the primary login interface for the application, handling user authentication and role
+    verification.
+    """
 
     def __init__(self, on_login_success: callable):
         """initialises the LoginWindow and sets its minimum dimensions."""
@@ -196,7 +198,9 @@ class LoginWindow(QWidget):
         root.addStretch(1)
 
     def _build_login_card(self) -> QFrame:
-        """builds the login card containing the branding header, role selector, and credential form."""
+        """builds the login card containing the branding header, role selector, and credential
+        form.
+        """
         panel = QFrame()
         panel.setObjectName("loginCard")
         panel.setFixedWidth(600)

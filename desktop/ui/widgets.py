@@ -6,7 +6,8 @@
 
 """
 desktop/ui/widgets.py
-reusable UI components including buttons, cards, form rows, badges, and toast messages for the Horizon Cinemas theme.
+reusable UI components including buttons, cards, form rows, badges, and toast messages
+for the Horizon Cinemas theme.
 """
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer  # type: ignore

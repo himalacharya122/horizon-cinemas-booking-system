@@ -10,18 +10,17 @@ from typing import Dict, List
 
 from backend.services.ai_service import call_groq
 
-SUGGESTION_PROMPT = """You are a cinema analytics assistant. \
-Based on the conversation below, suggest exactly 4 short follow-up questions the user might want to ask next.
-
-Rules:
-- Max 6 words each
-- Relevant to what was just discussed, or useful cinema topics if no history
-- Return ONLY a JSON array of 4 strings, nothing else
-
-Example: ["Top films this month", "Staff performance", "Occupancy rate", "Weekly revenue"]
-
-CONVERSATION:
-{history}"""
+SUGGESTION_PROMPT = (
+    "You are a cinema analytics assistant. Based on the conversation below, "
+    "suggest exactly 4 short follow-up questions the user might want to ask next.\n"
+    "\nRules:\n"
+    "- Max 6 words each\n"
+    "- Relevant to what was just discussed, or useful cinema topics if no history\n"
+    "- Return ONLY a JSON array of 4 strings, nothing else\n"
+    '\nExample: ["Top films this month", "Staff performance", "Occupancy rate", "Weekly revenue"]\n'
+    "\nCONVERSATION:\n"
+    "{history}"
+)
 
 
 async def get_dynamic_suggestions(history: List[Dict[str, str]]) -> List[str]:

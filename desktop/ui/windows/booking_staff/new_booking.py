@@ -7,7 +7,8 @@
 """
 desktop/ui/windows/booking_staff/new_booking.py
 implements the New Booking interface for Booking Staff.
-features an interactive Seat Map, AI-driven seat recommendations, upsell suggestions, and receipt generation.
+features an interactive Seat Map, AI-driven seat recommendations, upsell suggestions, and receipt
+generation.
 """
 
 from typing import Dict, List, Optional
@@ -168,7 +169,8 @@ def _build_upsell_tips(avail: dict) -> List[str]:
             f"only £{ug_price - unit_price:.2f} more."
         )
         tips.append(
-            f"VIP seats available from £{vip_price:.2f}/ticket — worth mentioning for special occasions."
+            f"VIP seats available from £{vip_price:.2f}/ticket — worth mentioning "
+            f"for special occasions."
         )
     elif seat_type == "upper_gallery":
         vip_price = round((unit_price / 1.20) * 1.44, 2)
@@ -951,7 +953,6 @@ class NewBookingView(QWidget):
 
             if recommended:
                 names = ", ".join(s["seat_number"] for s in recommended)
-                row = recommended[0]["row_label"]
                 self.seat_map_widget.set_ai_banner(
                     f"AI Recommendation: {names} - best centre-view seats for your group of {num}"
                 )

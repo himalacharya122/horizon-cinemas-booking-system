@@ -7,7 +7,8 @@
 """
 desktop/ui/windows/admin/all_bookings.py
 implements the All Bookings ledger view for Administrators.
-provides comprehensive access to booking records across all cinemas with integrated filtering by Cinema, Status, and Customer Name.
+provides comprehensive access to booking records across all cinemas with integrated
+filtering by Cinema, Status, and Customer Name.
 """
 
 from PyQt6.QtCore import Qt
@@ -69,7 +70,7 @@ class AllBookingsView(QWidget):
         self._load_cinemas()
 
     def _build_ui(self):
-        """constructs the primary layout including headers, filter controls, and the bookings ledger table."""
+        """constructs the primary layout including headers, filter controls, and the bookings ledger table."""  # noqa: E501
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -87,11 +88,11 @@ class AllBookingsView(QWidget):
         layout.addLayout(header)
 
         _combo_style = (
-            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
-            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "  # noqa: E501
+            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"  # noqa: E501
             f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
             f"QComboBox::drop-down {{ border: none; width: 24px; }}"
-            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "  # noqa: E501
             f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
         )
 
@@ -132,7 +133,7 @@ class AllBookingsView(QWidget):
         self.name_input.setFixedWidth(160)
         self.name_input.setFixedHeight(34)
         self.name_input.setStyleSheet(
-            f"QLineEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; padding: 0 10px; }}"
+            f"QLineEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; padding: 0 10px; }}"  # noqa: E501
             f"QLineEdit:focus {{ border-color: {ACCENT}; background: {WHITE}; }}"
         )
         filter_row.addWidget(self.name_input)
@@ -192,7 +193,7 @@ class AllBookingsView(QWidget):
 
         self.table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setItemDelegate(_LeftPaddingDelegate(14, self.table))

@@ -42,7 +42,9 @@ from desktop.ui.widgets import (
 
 
 class CancelledBookingsView(QWidget):
-    """a view that displays a table of cancelled bookings with filtering by customer name or reference."""
+    """a view that displays a table of cancelled bookings with filtering by customer name
+    or reference.
+    """
 
     def __init__(self):
         """initialises the view and fetches the initial set of cancelled bookings."""
@@ -51,7 +53,9 @@ class CancelledBookingsView(QWidget):
         self._load_cancelled()
 
     def _build_ui(self):
-        """constructs the primary layout including the filter bar and the cancelled bookings table."""
+        """constructs the primary layout including the filter bar and the cancelled
+        bookings table.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -109,11 +113,14 @@ class CancelledBookingsView(QWidget):
         self.table.verticalHeader().setDefaultSectionSize(44)
 
         self.table.setStyleSheet(
-            f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {WHITE}; }}"
+            f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; "
+            f"background: {WHITE}; }}"
             f"QHeaderView::section {{ background-color: {BG_DARK}; color: {TEXT_SECONDARY}; "
-            f"font-weight: 600; padding: 8px 5px; border: none; border-bottom: 2.5px solid {BORDER}; "
-            f"border-right: 1px solid {BORDER}; border-left: 10px solid transparent; }}"
-            f"QTableWidget::item {{ border-left: 10px solid transparent; padding-right: 10px; }}"
+            f"font-weight: 600; padding: 8px 5px; border: none; "
+            f"border-bottom: 2.5px solid {BORDER}; border-right: 1px solid {BORDER}; "
+            f"border-left: 10px solid transparent; }}"
+            f"QTableWidget::item {{ border-left: 10px solid transparent; "
+            f"padding-right: 10px; }}"
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setColumnCount(9)

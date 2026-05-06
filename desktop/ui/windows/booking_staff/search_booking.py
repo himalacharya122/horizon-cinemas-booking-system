@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/booking_staff/search_booking.py
-implements the Search Bookings view for Booking Staff to look up active and historical reservations.
+implements the Search Bookings view for Booking Staff to look up active and historical
+reservations.
 provides filtering by Reference, Customer Name, Email, and Status.
 """
 
@@ -184,15 +185,28 @@ class SearchBookingView(QWidget):
         self.table.verticalHeader().setDefaultSectionSize(38)
 
         self.table.setStyleSheet(
-            f"QTableWidget {{ border: 1px solid {BORDER}; border-radius: 8px; background: {WHITE}; }}"
+            f"QTableWidget {{ border: 1px solid {BORDER}; border-radius: 8px; "
+            f"background: {WHITE}; }}"
             f"QHeaderView::section {{ background-color: {BG_DARK}; color: {TEXT_SECONDARY}; "
-            f"font-weight: 600; padding: 8px 5px; border: none; border-bottom: 1px solid {BORDER}; "
-            f"border-right: 1px solid {BORDER}; border-left: 10px solid transparent; }}"
-            f"QTableWidget::item {{ border-left: 10px solid transparent; padding-right: 10px; }}"
+            f"font-weight: 600; padding: 8px 5px; border: none; "
+            f"border-bottom: 1px solid {BORDER}; border-right: 1px solid {BORDER}; "
+            f"border-left: 10px solid transparent; }}"
+            f"QTableWidget::item {{ border-left: 10px solid transparent; "
+            f"padding-right: 10px; }}"
         )
         self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels(
-            ["Reference", "Film", "Date", "Time", "Customer", "Phone", "Tickets", "Total", "Status"]
+            [
+                "Reference",
+                "Film",
+                "Date",
+                "Time",
+                "Customer",
+                "Phone",
+                "Tickets",
+                "Total",
+                "Status",
+            ]
         )
 
         hh = self.table.horizontalHeader()

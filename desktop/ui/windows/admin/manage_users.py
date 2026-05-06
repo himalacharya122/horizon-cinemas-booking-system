@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/admin/manage_users.py
-implements the staff user management interface for Administrators to audit account activity and manage security credentials.
+implements the staff user management interface for Administrators to audit account activity
+and manage security credentials.
 """
 
 from PyQt6.QtCore import Qt
@@ -65,7 +66,7 @@ class _LeftPaddingDelegate(QStyledItemDelegate):
 
 
 class ManageUsersView(QWidget):
-    """a view for managing cinema staff accounts, including password resets and activity auditing."""
+    """a view for managing cinema staff accounts, including password resets and activity auditing."""  # noqa: E501
 
     def __init__(self):
         """initialises the user management view and loads account data."""
@@ -75,7 +76,7 @@ class ManageUsersView(QWidget):
         self._load_data()
 
     def _build_ui(self):
-        """constructs the primary interface including account headers, filters, and the users table."""
+        """constructs the primary interface including account headers, filters, and the users table."""  # noqa: E501
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -92,11 +93,11 @@ class ManageUsersView(QWidget):
         header.addStretch()
 
         _combo_style = (
-            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
-            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "  # noqa: E501
+            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"  # noqa: E501
             f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
             f"QComboBox::drop-down {{ border: none; width: 24px; }}"
-            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "  # noqa: E501
             f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
         )
 
@@ -165,7 +166,7 @@ class ManageUsersView(QWidget):
 
         self.table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setItemDelegate(_LeftPaddingDelegate(14, self.table))
@@ -391,7 +392,7 @@ class ActivityDialog(QDialog):
         table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2px solid {BORDER}; }}"  # noqa: E501
         )
         table.setItemDelegate(_LeftPaddingDelegate(12, table))
 

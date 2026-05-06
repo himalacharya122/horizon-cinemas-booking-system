@@ -51,7 +51,9 @@ from desktop.ui.widgets import (
 
 
 class CreateStaffView(QWidget):
-    """a form-based view for Managers to provision new user accounts with specific roles and cinema assignments."""
+    """a form-based view for Managers to provision new user accounts with specific roles
+    and cinema assignments.
+    """
 
     def __init__(self):
         """initialises the CreateStaffView and builds the registration form."""
@@ -59,7 +61,9 @@ class CreateStaffView(QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        """constructs the primary UI layout featuring the registration form and informational banners."""
+        """constructs the primary UI layout featuring the registration form and informational
+        banners.
+        """
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 

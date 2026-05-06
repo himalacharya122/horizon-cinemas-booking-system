@@ -7,7 +7,8 @@
 """
 desktop/ui/windows/booking_staff/my_bookings_today.py
 implements the My Bookings Today view for Booking Staff.
-provides a performance snapshot and a detailed table of reservations processed by the current user on the current date.
+provides a performance snapshot and a detailed table of reservations processed by the
+current user on the current date.
 """
 
 from datetime import date
@@ -60,7 +61,9 @@ class MyBookingsTodayView(QWidget):
         self._load_bookings()
 
     def _build_ui(self):
-        """constructs the primary layout including stat cards, the date indicator, and the bookings table."""
+        """constructs the primary layout including stat cards, the date indicator, and the
+        bookings table.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -121,11 +124,14 @@ class MyBookingsTodayView(QWidget):
         self.table.verticalHeader().setDefaultSectionSize(38)
 
         self.table.setStyleSheet(
-            f"QTableWidget {{ border: 1px solid {BORDER}; border-radius: 8px; background: {WHITE}; }}"
+            f"QTableWidget {{ border: 1px solid {BORDER}; border-radius: 8px; "
+            f"background: {WHITE}; }}"
             f"QHeaderView::section {{ background-color: {BG_DARK}; color: {TEXT_SECONDARY}; "
-            f"font-weight: 600; padding: 8px 5px; border: none; border-bottom: 1px solid {BORDER}; "
-            f"border-right: 1px solid {BORDER}; border-left: 10px solid transparent; }}"
-            f"QTableWidget::item {{ border-left: 10px solid transparent; padding-right: 10px; }}"
+            f"font-weight: 600; padding: 8px 5px; border: none; "
+            f"border-bottom: 1px solid {BORDER}; border-right: 1px solid {BORDER}; "
+            f"border-left: 10px solid transparent; }}"
+            f"QTableWidget::item {{ border-left: 10px solid transparent; "
+            f"padding-right: 10px; }}"
         )
         self.table.setColumnCount(8)
         self.table.setHorizontalHeaderLabels(

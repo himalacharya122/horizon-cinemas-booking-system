@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/booking_staff/film_listings.py
-implements the Film Listings view for Booking Staff to browse scheduled films at a specific cinema.
+implements the Film Listings view for Booking Staff to browse scheduled films at a specific
+cinema.
 includes filtering options for Date, Genre, Rating, and Showtime period.
 """
 
@@ -52,7 +53,9 @@ from desktop.ui.widgets import (
 
 
 class FilmListingsView(QWidget):
-    """a view that enables staff to explore upcoming showtimes and screen availability for films."""
+    """a view that enables staff to explore upcoming showtimes and screen availability for
+    films.
+    """
 
     def __init__(self):
         """initialises the view and fetches the available cinema locations."""
@@ -62,7 +65,9 @@ class FilmListingsView(QWidget):
         self._load_cinemas()
 
     def _build_ui(self):
-        """constructs the primary layout including the header, filter controls, and the scrollable cards area."""
+        """constructs the primary layout including the header, filter controls, and the
+        scrollable cards area.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)

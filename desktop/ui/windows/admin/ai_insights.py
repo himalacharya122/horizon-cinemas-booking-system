@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/admin/ai_insights.py
-implements the AI Insights analytics dashboard, featuring a chat interface and conversational data analysis tools.
+implements the AI Insights analytics dashboard, featuring a chat interface
+and conversational data analysis tools.
 """
 
 import re
@@ -60,7 +61,7 @@ def _inline_md(text: str) -> str:
     # Inline code: `code`
     text = re.sub(
         r"`([^`]+?)`",
-        r'<code style="background:#F1F1EF; padding:1px 4px; border-radius:3px; font-family:monospace;">\1</code>',
+        r'<code style="background:#F1F1EF; padding:1px 4px; border-radius:3px; font-family:monospace;">\1</code>',  # noqa: E501
         text,
     )
     return text

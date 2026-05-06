@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/admin/manage_listings.py
-implements the listing management interface for Administrators to coordinate film schedules across cinema screens.
+implements the listing management interface for Administrators to coordinate film schedules
+across cinema screens.
 """
 
 from PyQt6.QtCore import QDate, Qt, QTime
@@ -69,7 +70,7 @@ class _LeftPaddingDelegate(QStyledItemDelegate):
 
 
 class ManageListingsView(QWidget):
-    """a view for managing cinema film listings, allowing Administrators to schedule movie showings."""
+    """a view for managing cinema film listings, allowing Administrators to schedule movie showings."""  # noqa: E501
 
     def __init__(self):
         """initialises the listings management view and loads current scheduling data."""
@@ -78,7 +79,10 @@ class ManageListingsView(QWidget):
         self._load_data()
 
     def _build_ui(self):
-        """constructs the primary interface including scheduling headers, cinema filters, and the listings table."""
+        """
+        constructs the primary interface including scheduling headers, cinema filters,
+        and the listings table.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -145,7 +149,7 @@ class ManageListingsView(QWidget):
         self.table.setColumnWidth(6, 100)
         self.table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setItemDelegate(_LeftPaddingDelegate(8, self.table))
@@ -324,7 +328,7 @@ class ListingDialog(QDialog):
         bl.setContentsMargins(24, 20, 24, 20)
         bl.setSpacing(20)
 
-        _combo_style = f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"
+        _combo_style = f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"  # noqa: E501
 
         self.film_combo = QComboBox()
         self.film_combo.setStyleSheet(_combo_style)
@@ -347,7 +351,7 @@ class ListingDialog(QDialog):
         self.start_date.setCalendarPopup(True)
         self.start_date.setDate(QDate.currentDate())
         self.start_date.setStyleSheet(
-            f"QDateEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"
+            f"QDateEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"  # noqa: E501
         )
         start_col = QVBoxLayout()
         start_lbl = QLabel("Start Date")
@@ -363,7 +367,7 @@ class ListingDialog(QDialog):
         self.end_date.setCalendarPopup(True)
         self.end_date.setDate(QDate.currentDate().addDays(14))
         self.end_date.setStyleSheet(
-            f"QDateEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"
+            f"QDateEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; }}"  # noqa: E501
         )
         end_col = QVBoxLayout()
         end_lbl = QLabel("End Date")
@@ -476,7 +480,7 @@ class ListingDialog(QDialog):
         time_edit.setTime(QTime(10, 0))
         time_edit.setFixedWidth(110)
         time_edit.setStyleSheet(
-            f"QTimeEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; padding: 4px 10px; color: {TEXT_PRIMARY}; }}"
+            f"QTimeEdit {{ border: 1.5px solid {BORDER}; border-radius: 8px; background: {BG_INPUT}; padding: 4px 10px; color: {TEXT_PRIMARY}; }}"  # noqa: E501
             f"QTimeEdit:focus {{ border-color: {ACCENT}; background: {WHITE}; }}"
         )
 
@@ -489,11 +493,11 @@ class ListingDialog(QDialog):
         type_combo.addItems(["morning", "afternoon", "evening"])
         type_combo.setFixedWidth(140)
         type_combo.setStyleSheet(
-            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "  # noqa: E501
             f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; }}"
             f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
             f"QComboBox::drop-down {{ border: none; width: 24px; }}"
-            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "  # noqa: E501
             f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
         )
 

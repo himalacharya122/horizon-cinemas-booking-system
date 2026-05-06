@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/admin/manage_pricing.py
-implements the ticket pricing management interface for Administrators to adjust cinema-specific rates.
+implements the ticket pricing management interface for Administrators to adjust
+cinema-specific rates.
 """
 
 from PyQt6.QtCore import Qt
@@ -145,7 +146,7 @@ class ManagePricingView(QWidget):
 
         self.table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setItemDelegate(_LeftPaddingDelegate(14, self.table))
@@ -232,11 +233,11 @@ class PricingDialog(QDialog):
         form.setSpacing(14)
 
         _combo_style = (
-            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "  # noqa: E501
             f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 36px; }}"
             f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
             f"QComboBox::drop-down {{ border: none; width: 24px; }}"
-            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "  # noqa: E501
             f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
         )
 

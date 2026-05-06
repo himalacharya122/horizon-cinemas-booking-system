@@ -183,14 +183,14 @@ class ReportsView(QWidget):
     @staticmethod
     def _filter_spin_style() -> str:
         # Sharp SVG triangles for consistent rendering
-        up_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDBMOCA2SDBMNCAwWiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="
-        down_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDZMMCAwSDhMNCA2WiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="
+        up_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDBMOCA2SDBMNCAwWiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="  # noqa: E501
+        down_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDZMMCAwSDhMNCA2WiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="  # noqa: E501
 
         return (
-            f"QSpinBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: {BG_INPUT}; "
+            f"QSpinBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: {BG_INPUT}; "  # noqa: E501
             f"padding: 4px 8px; color: {TEXT_PRIMARY}; outline: none; }}"
             f"QSpinBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
-            f"QSpinBox::up-button, QSpinBox::down-button {{ width: 22px; border: none; background: transparent; }}"
+            f"QSpinBox::up-button, QSpinBox::down-button {{ width: 22px; border: none; background: transparent; }}"  # noqa: E501
             f"QSpinBox::up-arrow {{ image: url({up_svg}); width: 8px; height: 6px; }}"
             f"QSpinBox::down-arrow {{ image: url({down_svg}); width: 8px; height: 6px; }}"
         )
@@ -209,7 +209,7 @@ class ReportsView(QWidget):
         t.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         t.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         t.setItemDelegate(_LeftPaddingDelegate(14, t))

@@ -6,8 +6,9 @@
 
 """
 desktop/ui/windows/admin/cancellation_log.py
-implements the Cancellation Log view for Administrators to audit cancelled bookings and financial impacts.
-provides insights into Fees Collected and Total Refunded amounts across all cinemas.
+implements the Cancellation Log view for Administrators to audit cancelled bookings
+and financial impacts. provides insights into Fees Collected and Total Refunded
+amounts across all cinemas.
 """
 
 from PyQt6.QtCore import Qt  # type: ignore
@@ -62,7 +63,7 @@ class _LeftPaddingDelegate(QStyledItemDelegate):
 
 
 class CancellationLogView(QWidget):
-    """a view providing a detailed audit trail of all booking cancellations across the cinema network."""
+    """a view providing a detailed audit trail of all booking cancellations across the cinema network."""  # noqa: E501
 
     def __init__(self):
         """initialises the cancellation log view and builds the interface."""
@@ -71,7 +72,7 @@ class CancellationLogView(QWidget):
         self._load_cinemas()
 
     def _build_ui(self):
-        """constructs the primary layout featuring financial summary cards and the cancellation audit table."""
+        """constructs the primary layout featuring financial summary cards and the cancellation audit table."""  # noqa: E501
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
@@ -100,11 +101,11 @@ class CancellationLogView(QWidget):
         self.cinema_filter = QComboBox()
         self.cinema_filter.setFixedWidth(260)
         self.cinema_filter.setStyleSheet(
-            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "
-            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"
+            f"QComboBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: #F2F1EE; "  # noqa: E501
+            f"padding: 4px 10px; color: {TEXT_PRIMARY}; outline: none; min-height: 34px; max-height: 34px; }}"  # noqa: E501
             f"QComboBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
             f"QComboBox::drop-down {{ border: none; width: 24px; }}"
-            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "
+            f"QComboBox QAbstractItemView {{ background-color: {WHITE}; selection-background-color: {ACCENT}; "  # noqa: E501
             f"selection-color: {WHITE}; border: 1px solid {BORDER}; outline: none; }}"
         )
         self.cinema_filter.setFixedHeight(34)
@@ -216,7 +217,7 @@ class CancellationLogView(QWidget):
 
         self.table.setStyleSheet(
             f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
-            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
             "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
         )
         self.table.setItemDelegate(_LeftPaddingDelegate(14, self.table))

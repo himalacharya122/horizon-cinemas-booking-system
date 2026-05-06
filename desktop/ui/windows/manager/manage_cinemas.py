@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/manager/manage_cinemas.py
-implements the Manager view for registering new cinemas, adding screens, and configuring base ticket pricing.
+implements the Manager view for registering new cinemas,
+adding screens, and configuring base ticket pricing.
 supports city-based organisation and show period pricing tiers.
 """
 
@@ -75,7 +76,8 @@ _PRIMARY_BTN_QSS = (
 
 _DARK_BTN_QSS = (
     f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
-    f"min-height: 34px; max-height: 34px; min-width: 100px; font-weight: 700; border-radius: 6px; }}"
+    f"min-height: 34px; max-height: 34px; min-width: 100px; \
+    font-weight: 700; border-radius: 6px; }}"
     f"QPushButton:hover {{ background-color: #2E2C28; }}"
 )
 
@@ -632,7 +634,8 @@ class ScreenDialog(QDialog):
 
 
 class PriceDialog(QDialog):
-    """a modal dialog for setting or updating regional base ticket prices for specific show periods."""
+    """a modal dialog for setting or updating regional
+    base ticket prices for specific show periods."""
 
     def __init__(self, parent):
         """initialises the PriceDialog and configures its properties."""

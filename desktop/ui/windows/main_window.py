@@ -7,7 +7,8 @@
 """
 desktop/ui/windows/main_window.py
 implements the main application shell for Horizon Cinemas Booking System.
-it includes a scrollable sidebar with collapsible navigation sections and a QStackedWidget for managing content views.
+it includes a scrollable sidebar with collapsible navigation sections and a QStackedWidget for
+managing content views.
 """
 
 from PyQt6.QtCore import Qt  # type: ignore
@@ -44,25 +45,59 @@ SIDEBAR_TEXT_MUTED = "#777777"
 # SVG path data for sidebar navigation icons
 ICONS = {
     "Film Listings": '<path d="M2 18h20V6H2v12zM7 6v12M17 6v12M2 12h20"/>',
-    "Browse All Films": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+    "Browse All Films": (
+        '<rect x="3" y="3" width="18" height="18" rx="2"/>'
+        '<path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>'
+    ),
     "New Booking": '<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>',
     "Search Bookings": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
-    "My Bookings Today": '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    "My Bookings Today": (
+        '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'
+    ),
     "Cancel Booking": '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
-    "Cancelled Bookings": '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
-    "Manage Films": '<path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/>',
+    "Cancelled Bookings": (
+        '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 '
+        '2 2v2"/>'
+    ),
+    "Manage Films": (
+        '<path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/>'
+    ),
     "Manage Listings": '<path d="M3 12h18M3 6h18M3 18h18"/>',
-    "Manage Pricing": '<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 18V6"/>',
-    "Manage Users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
-    "All Bookings": '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>',
-    "Cancellation Log": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+    "Manage Pricing": (
+        '<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8'
+        'M12 18V6"/>'
+    ),
+    "Manage Users": (
+        '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'
+        '<path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>'
+    ),
+    "All Bookings": (
+        '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>'
+        '<path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>'
+    ),
+    "Cancellation Log": (
+        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
+        '<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>'
+    ),
     "AI Insights": '<path d="m13 2-2 10h8l-2 10"/>',
     "Reports": '<path d="M18 20V10M12 20V4M6 20v-6"/>',
-    "Dashboard": '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18M9 21V9"/>',
-    "Manage Cinemas": '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
-    "Create Staff": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>',
-    "My Profile": '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    "Help & Guide": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>',
+    "Dashboard": (
+        '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18M9 21V9"/>'
+    ),
+    "Manage Cinemas": (
+        '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'
+        '<polyline points="9 22 9 12 15 12 15 22"/>'
+    ),
+    "Create Staff": (
+        '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'
+        '<line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>'
+    ),
+    "My Profile": (
+        '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+    ),
+    "Help & Guide": (
+        '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>'
+    ),
 }
 
 
@@ -104,7 +139,8 @@ class SidebarButton(QPushButton):
         self._set_icon(color)
 
         self.setStyleSheet(
-            "QPushButton { background-color: transparent; border: none; min-height: 28px; max-height: 28px; }"
+            "QPushButton { background-color: transparent; border: none; "
+            "min-height: 28px; max-height: 28px; }"
         )
         if not checked:
             self.setStyleSheet(
@@ -117,9 +153,11 @@ class SidebarButton(QPushButton):
         path_data = ICONS.get(self.nav_label, "")
         if not path_data:
             return
-        svg_data = f"""<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{hex_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{path_data}</svg>""".encode(
-            "utf-8"
-        )
+        svg_data = (
+            f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" '
+            f'stroke="{hex_color}" stroke-width="2" stroke-linecap="round" '
+            f'stroke-linejoin="round">{path_data}</svg>'
+        ).encode("utf-8")
         renderer = QSvgRenderer(svg_data)
         pixmap = QPixmap(16, 16)
         pixmap.fill(Qt.GlobalColor.transparent)
@@ -204,7 +242,8 @@ class MainWindow(QWidget):
         sidebar_frame = QFrame()
         sidebar_frame.setFixedWidth(300)
         sidebar_frame.setStyleSheet(
-            f"QFrame {{ background-color: {SIDEBAR_BG}; border-right: 1px solid {SIDEBAR_BORDER}; }}"
+            f"QFrame {{ background-color: {SIDEBAR_BG}; "
+            f"border-right: 1px solid {SIDEBAR_BORDER}; }}"
         )
         sidebar_outer = QVBoxLayout(sidebar_frame)
         sidebar_outer.setContentsMargins(0, 0, 0, 0)
@@ -250,10 +289,14 @@ class MainWindow(QWidget):
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setStyleSheet(
             f"QScrollArea {{ border: none; background: transparent; }}"
-            f"QScrollBar:vertical {{ width: 7px; background: {SIDEBAR_BG}; border: none; margin-right: 1px; }}"
-            f"QScrollBar::handle:vertical {{ background: {ACCENT}; border-radius: 3px; min-height: 40px; border: none; }}"
-            f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; border: none; background: none; }}"
-            f"QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: {SIDEBAR_BG}; border: none; }}"
+            f"QScrollBar:vertical {{ width: 7px; background: {SIDEBAR_BG}; "
+            f"border: none; margin-right: 1px; }}"
+            f"QScrollBar::handle:vertical {{ background: {ACCENT}; border-radius: 3px; "
+            f"min-height: 40px; border: none; }}"
+            f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; "
+            f"border: none; background: none; }}"
+            f"QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ "
+            f"background: {SIDEBAR_BG}; border: none; }}"
         )
 
         nav_widget = QWidget()
@@ -355,7 +398,9 @@ class MainWindow(QWidget):
         logout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         logout_btn.setFont(body_font(8, bold=True))
         logout_btn.setStyleSheet(
-            f"QPushButton {{ color: {SIDEBAR_TEXT_MUTED}; background: transparent; border: none; padding: 4px; }} QPushButton:hover {{ color: {ACCENT}; }}"
+            f"QPushButton {{ color: {SIDEBAR_TEXT_MUTED}; background: transparent; "
+            f"border: none; padding: 4px; }} "
+            f"QPushButton:hover {{ color: {ACCENT}; }}"
         )
         logout_btn.clicked.connect(self._do_logout)
         ul.addWidget(logout_btn)
@@ -376,9 +421,13 @@ class MainWindow(QWidget):
         """renders a circular application logo using SVG data as a QLabel pixmap."""
         lbl = QLabel()
         lbl.setFixedSize(size, size)
-        svg_data = f"""<svg width="{size}" height="{size}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="black"/><rect x="20" y="15" width="6" height="34" fill="white"/><rect x="38" y="15" width="6" height="34" fill="white"/><rect x="20" y="29" width="24" height="6" fill="white"/></svg>""".encode(
-            "utf-8"
-        )
+        svg_data = (
+            f'<svg width="{size}" height="{size}" viewBox="0 0 64 64" fill="none" '
+            f'xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" '
+            f'fill="black"/><rect x="20" y="15" width="6" height="34" fill="white"/>'
+            f'<rect x="38" y="15" width="6" height="34" fill="white"/>'
+            f'<rect x="20" y="29" width="24" height="6" fill="white"/></svg>'
+        ).encode("utf-8")
         renderer = QSvgRenderer(svg_data)
         pixmap = QPixmap(size, size)
         pixmap.fill(Qt.GlobalColor.transparent)
@@ -406,7 +455,9 @@ class MainWindow(QWidget):
         self.stack.setCurrentWidget(self._pages[label])
 
     def _create_page(self, label: str) -> QWidget:
-        """factory method to instantiate the appropriate view widget based on the navigation label."""
+        """factory method to instantiate the appropriate view widget based on the navigation
+        label.
+        """
         # staff views
         if label == "Film Listings":
             from desktop.ui.windows.booking_staff.film_listings import FilmListingsView

@@ -6,7 +6,8 @@
 
 """
 desktop/ui/windows/booking_staff/profile_view.py
-implements the Profile view for Booking Staff to view personal account details and manage security settings.
+implements the Profile view for Booking Staff to view personal account details and manage
+security settings.
 """
 
 from PyQt6.QtCore import Qt  # type: ignore
@@ -24,10 +25,8 @@ from desktop.api_client import api
 from desktop.ui.theme import (
     ACCENT,
     BLACK,
-    DANGER,
     SPACING_LG,
     SPACING_MD,
-    SUCCESS,
     TEXT_MUTED,
     WHITE,
     body_font,
@@ -45,7 +44,9 @@ from desktop.ui.widgets import (
 
 
 class ProfileView(QWidget):
-    """a view displaying the current staff member's account information and password management tools."""
+    """a view displaying the current staff member's account information and password management
+    tools.
+    """
 
     def __init__(self):
         """initialises the profile view and builds the interface."""
@@ -53,7 +54,9 @@ class ProfileView(QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        """constructs the primary layout featuring profile details and password security cards."""
+        """constructs the primary layout featuring profile details and password security
+        cards.
+        """
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 
@@ -198,8 +201,6 @@ class ProfileView(QWidget):
 
     def _show_status(self, msg: str, is_error: bool):
         """displays a formatted status message in the security card."""
-        color = DANGER if is_error else SUCCESS
-        bg = f"{color}11"
         self.status_lbl.setText(msg)
         self.status_lbl.setStyleSheet(
             f"color: {WHITE}; background-color: {ACCENT};border-radius: 4px; padding: 10px;"

@@ -7,7 +7,8 @@
 """
 desktop/ui/windows/admin/manage_films.py
 implements the movie catalogue management interface for Administrators.
-supports CRUD operations including adding new movie records, editing existing entries, and performing soft-deletions.
+supports CRUD operations including adding new movie records, editing existing entries,
+and performing soft-deletions.
 """
 
 import csv
@@ -149,7 +150,7 @@ def _centered(widget: QWidget) -> QWidget:
 
 
 class ManageFilmsView(QWidget):
-    """a view for managing the cinema's film catalogue, including filtering and export functionality."""
+    """a view for managing the cinema's film catalogue, including filtering and export functionality."""  # noqa: E501
 
     def __init__(self):
         """initialises the film management view and loads the movie catalogue."""
@@ -159,7 +160,7 @@ class ManageFilmsView(QWidget):
         self._load_films()
 
     def _build_ui(self):
-        """constructs the primary interface including headers, filter controls, and the films table."""
+        """constructs the primary interface including headers, filter controls, and the films table."""  # noqa: E501
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(0)
@@ -688,7 +689,7 @@ class FilmDialog(QDialog):
         return (
             f"QSpinBox, QDoubleSpinBox {{ background: {BG_INPUT}; border: 1.5px solid {BORDER}; "
             f"border-radius: 8px; padding: 4px 10px; font-size: 10pt; color: {TEXT_PRIMARY}; }}"
-            f"QSpinBox:focus, QDoubleSpinBox:focus {{ border-color: {ACCENT}; background: {WHITE}; }}"
+            f"QSpinBox:focus, QDoubleSpinBox:focus {{ border-color: {ACCENT}; background: {WHITE}; }}"  # noqa: E501
         )
 
     @staticmethod

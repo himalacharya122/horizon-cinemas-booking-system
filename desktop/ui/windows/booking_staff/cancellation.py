@@ -48,7 +48,9 @@ from desktop.ui.widgets import (
 
 
 class CancellationView(QWidget):
-    """a view that enables staff to search for bookings and process cancellations with automated fee calculations."""
+    """a view that enables staff to search for bookings and process cancellations with automated
+    fee calculations.
+    """
 
     def __init__(self):
         """initialises the view and prepares the internal booking state."""
@@ -57,7 +59,9 @@ class CancellationView(QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        """constructs the primary layout including the search interface and dynamic result cards."""
+        """constructs the primary layout including the search interface and dynamic result
+        cards.
+        """
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 
@@ -94,7 +98,8 @@ class CancellationView(QWidget):
         self.ref_input = QLineEdit()
         self.ref_input.setPlaceholderText("e.g. HC-2025-00001")
         self.ref_input.setStyleSheet(
-            f"border: 1.5px solid {BORDER}; border-radius: 8px; min-height: 34px; max-height: 34px; padding: 0 10px;"
+            f"border: 1.5px solid {BORDER}; border-radius: 8px; "
+            f"min-height: 34px; max-height: 34px; padding: 0 10px;"
         )
         search_card.add(self.ref_input)
 
@@ -169,7 +174,9 @@ class CancellationView(QWidget):
                 self._clear_sub_layout(item.layout())
 
     def _show_details(self, b: dict):
-        """populates the details card with comprehensive information about the retrieved booking."""
+        """populates the details card with comprehensive information about the retrieved
+        booking.
+        """
         self._clear_card(self.details_card)
 
         title_row = QHBoxLayout()
@@ -227,7 +234,8 @@ class CancellationView(QWidget):
 
             cancel_btn = danger_button("Cancel This Booking")
             cancel_btn.setStyleSheet(
-                f"background-color: {ACCENT}; color: {WHITE}; border: none; min-height: 34px; max-height: 34px;"
+                f"background-color: {ACCENT}; color: {WHITE}; border: none; "
+                f"min-height: 34px; max-height: 34px;"
             )
             cancel_btn.clicked.connect(self._cancel_booking)
             self.details_card.add(cancel_btn)

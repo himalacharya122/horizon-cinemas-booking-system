@@ -41,6 +41,14 @@ def get_current_user(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Ensure user_id is available as an integer (it's stored as 'sub' in JWT)
+    if "sub" in payload and "user_id" not in payload:
+        try:
+            payload["user_id"] = int(payload["sub"])
+        except (ValueError, TypeError):
+            pass
+            
     return payload
 
 

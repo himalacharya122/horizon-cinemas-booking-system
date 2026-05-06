@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 run_desktop.py
 Launch the Horizon Cinemas PyQt6 desktop application.

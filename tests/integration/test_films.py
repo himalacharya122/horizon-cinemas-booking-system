@@ -1,3 +1,9 @@
+# ============================================
+# Author: Garima Adhikari
+# Student ID: 24000896
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 tests/integration/test_films.py
 Integration tests for film and listing CRUD endpoints.

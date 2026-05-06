@@ -1,3 +1,9 @@
+# ============================================
+# Author: Garima Adhikari
+# Student ID: 24000896
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 tests/unit/test_models.py
 Unit tests for ORM model properties and constraints.

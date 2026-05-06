@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 tests/integration/test_general.py
 General integration tests: health check, edge cases, bad input.

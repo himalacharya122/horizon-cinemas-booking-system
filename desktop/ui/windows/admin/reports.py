@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/admin/reports.py
 Admin reports: monthly revenue, bookings per listing, top films,
@@ -8,12 +14,15 @@ import csv
 import io
 from datetime import date
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (  # type: ignore
-    QApplication,
     QFileDialog,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QSpinBox,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -22,15 +31,38 @@ from PyQt6.QtWidgets import (  # type: ignore
 )
 
 from desktop.api_client import api
-from desktop.ui.theme import SPACING_LG, SPACING_MD, TEXT_SECONDARY
+from desktop.ui.theme import (
+    ACCENT,
+    ACCENT_HOVER,
+    BG_INPUT,
+    BORDER,
+    HERO_BG,
+    SPACING_LG,
+    SPACING_MD,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    WHITE,
+)
 from desktop.ui.widgets import (
     error_dialog,
     heading_label,
+    muted_label,
     primary_button,
     secondary_button,
     separator,
     show_toast,
 )
+
+
+class _LeftPaddingDelegate(QStyledItemDelegate):
+    def __init__(self, padding: int = 8, parent=None):
+        super().__init__(parent)
+        self.padding = padding
+
+    def paint(self, painter, option, index):
+        padded = QStyleOptionViewItem(option)
+        padded.rect.adjust(self.padding, 0, 0, 0)
+        super().paint(painter, padded, index)
 
 
 class ReportsView(QWidget):
@@ -43,39 +75,68 @@ class ReportsView(QWidget):
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
 
-        layout.addWidget(heading_label("Reports"))
+        header_content = QVBoxLayout()
+        header_content.setSpacing(4)
+        header_content.addWidget(heading_label("Reports"))
+        desc = muted_label("Group-wide performance — revenue, occupancy, and cancellations")
+        header_content.addWidget(desc)
+
+        title_row = QHBoxLayout()
+        title_row.addLayout(header_content)
+        title_row.addStretch()
+
+        gen_btn = primary_button("Generate")
+        gen_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 110px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+        )
+        gen_btn.clicked.connect(self._generate_all)
+        title_row.addWidget(gen_btn)
+
+        export_btn = secondary_button("Export CSV")
+        export_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 110px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
+        export_btn.clicked.connect(self._export_csv)
+        title_row.addWidget(export_btn)
+        layout.addLayout(title_row)
 
         # Filters
         filters = QHBoxLayout()
+        filters.setSpacing(8)
+
         self.year_spin = QSpinBox()
         self.year_spin.setRange(2026, 2046)
         self.year_spin.setValue(date.today().year)
         self.year_spin.setMinimumWidth(100)
+        self.year_spin.setFixedHeight(34)
+        self.year_spin.setStyleSheet(self._filter_spin_style())
+
         year_lbl = QLabel("Year:")
-        year_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
+        year_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-size: 10pt; font-weight: 600;"
+        )
         filters.addWidget(year_lbl)
         filters.addWidget(self.year_spin)
 
         self.month_spin = QSpinBox()
         self.month_spin.setRange(1, 12)
         self.month_spin.setValue(date.today().month)
-        self.month_spin.setMinimumWidth(85)
+        self.month_spin.setMinimumWidth(90)
+        self.month_spin.setFixedHeight(34)
+        self.month_spin.setStyleSheet(self._filter_spin_style())
+
         month_lbl = QLabel("Month:")
-        month_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
+        month_lbl.setStyleSheet(
+            f"color: {TEXT_SECONDARY}; background: transparent; font-size: 10pt; font-weight: 600;"
+        )
         filters.addWidget(month_lbl)
         filters.addWidget(self.month_spin)
-
-        gen_btn = primary_button("Generate")
-        gen_btn.clicked.connect(self._generate_all)
-        filters.addWidget(gen_btn)
-
-        export_btn = secondary_button("Export CSV")
-        export_btn.clicked.connect(self._export_csv)
-        filters.addWidget(export_btn)
-
-        copy_btn = secondary_button("Copy to Clipboard")
-        copy_btn.clicked.connect(self._copy_to_clipboard)
-        filters.addWidget(copy_btn)
 
         filters.addStretch()
         layout.addLayout(filters)
@@ -88,30 +149,51 @@ class ReportsView(QWidget):
         self.rev_table = self._make_table(
             ["City", "Cinema", "Bookings", "Revenue", "Cancellations", "Cancel Fees"]
         )
+        self._set_column_widths(self.rev_table, [140, 220, 120, 140, 140, 150])
         self.tabs.addTab(self.rev_table, "Monthly Revenue")
 
         self.listing_table = self._make_table(
             ["Film", "Screen", "Cinema", "Start", "End", "Bookings", "Tickets"]
         )
+        self._set_column_widths(self.listing_table, [360, 100, 200, 130, 130, 110, 110])
         self.tabs.addTab(self.listing_table, "Bookings per Listing")
 
         self.top_table = self._make_table(["Film", "Revenue", "Bookings"])
+        self._set_column_widths(self.top_table, [420, 170, 130])
         self.tabs.addTab(self.top_table, "Top Films")
 
         self.staff_table = self._make_table(["Staff", "Username", "Cinema", "Bookings", "Revenue"])
+        self._set_column_widths(self.staff_table, [230, 190, 200, 120, 140])
         self.tabs.addTab(self.staff_table, "Staff Bookings")
 
         self.occ_table = self._make_table(
             ["Cinema", "Screen", "Capacity", "Bookings", "Tickets Sold", "Occupancy %"]
         )
+        self._set_column_widths(self.occ_table, [240, 110, 120, 120, 140, 130])
         self.tabs.addTab(self.occ_table, "Occupancy")
 
         self.cancel_table = self._make_table(
             ["Cinema", "Total Bookings", "Cancelled", "Rate %", "Fees Collected", "Refunded"]
         )
+        self._set_column_widths(self.cancel_table, [240, 160, 120, 100, 150, 150])
         self.tabs.addTab(self.cancel_table, "Cancellation Rate")
 
         layout.addWidget(self.tabs, 1)
+
+    @staticmethod
+    def _filter_spin_style() -> str:
+        # Sharp SVG triangles for consistent rendering
+        up_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDBMOCA2SDBMNCAwWiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="  # noqa: E501
+        down_svg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00IDZMMCAwSDhMNCA2WiIgZmlsbD0iIzVGNUU1QiIvPjwvc3ZnPg=="  # noqa: E501
+
+        return (
+            f"QSpinBox {{ border: 1.5px solid {BORDER}; border-radius: 8px; background-color: {BG_INPUT}; "  # noqa: E501
+            f"padding: 4px 8px; color: {TEXT_PRIMARY}; outline: none; }}"
+            f"QSpinBox:focus {{ border-color: {ACCENT}; background-color: {WHITE}; }}"
+            f"QSpinBox::up-button, QSpinBox::down-button {{ width: 22px; border: none; background: transparent; }}"  # noqa: E501
+            f"QSpinBox::up-arrow {{ image: url({up_svg}); width: 8px; height: 6px; }}"
+            f"QSpinBox::down-arrow {{ image: url({down_svg}); width: 8px; height: 6px; }}"
+        )
 
     def _make_table(self, headers: list) -> QTableWidget:
         t = QTableWidget()
@@ -119,9 +201,26 @@ class ReportsView(QWidget):
         t.setColumnCount(len(headers))
         t.setHorizontalHeaderLabels(headers)
         t.horizontalHeader().setStretchLastSection(True)
+        t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        t.horizontalHeader().setMinimumSectionSize(90)
         t.verticalHeader().setVisible(False)
+        t.verticalHeader().setDefaultSectionSize(44)
+        t.setShowGrid(False)
+        t.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        t.setStyleSheet(
+            f"QTableWidget {{ border: 1.5px solid {BORDER}; border-radius: 8px; }}"
+            f"QHeaderView::section {{ border-right: 1px solid {BORDER}; border-bottom: 2.5px solid {BORDER}; }}"  # noqa: E501
+            "QTableWidget::item:selected { background-color: #FEF2F2; color: #0A0908; }"
+        )
+        t.setItemDelegate(_LeftPaddingDelegate(14, t))
         t.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         return t
+
+    @staticmethod
+    def _set_column_widths(table: QTableWidget, widths: list[int]):
+        for idx, width in enumerate(widths):
+            if idx < table.columnCount():
+                table.setColumnWidth(idx, width)
 
     def _fill_table(self, table: QTableWidget, rows: list[list]):
         table.setRowCount(len(rows))
@@ -279,30 +378,3 @@ class ReportsView(QWidget):
             show_toast(self, f"Exported to {path}", success=True)
         except Exception as e:
             error_dialog(self, f"Export failed: {e}")
-
-    def _copy_to_clipboard(self):
-        """Copy the current tab's table data to clipboard as tab-separated text."""
-        table = self._get_current_table()
-        if not table or table.rowCount() == 0:
-            error_dialog(self, "No data to copy. Generate reports first.")
-            return
-
-        lines = []
-        # Headers
-        headers = []
-        for c in range(table.columnCount()):
-            item = table.horizontalHeaderItem(c)
-            headers.append(item.text() if item else "")
-        lines.append("\t".join(headers))
-
-        # Rows
-        for r in range(table.rowCount()):
-            row = []
-            for c in range(table.columnCount()):
-                item = table.item(r, c)
-                row.append(item.text() if item else "")
-            lines.append("\t".join(row))
-
-        text = "\n".join(lines)
-        QApplication.clipboard().setText(text)
-        show_toast(self, "Copied to clipboard!", success=True)

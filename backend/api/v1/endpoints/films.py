@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/v1/endpoints/films.py
 Film catalogue CRUD and enriched film listing view for the GUI.

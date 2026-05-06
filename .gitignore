@@ -19,6 +19,8 @@ docs
 # Ignore all .sqlite files
 *.sqlite
 
-pytest_cache/
+.pytest_cache/
 
 .ruff_cache/
+
+.vscode/

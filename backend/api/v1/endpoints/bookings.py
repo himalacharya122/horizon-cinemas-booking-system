@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/v1/endpoints/bookings.py
 Booking creation, cancellation, lookup, and availability checking.
@@ -19,10 +25,27 @@ from backend.schemas.booking import (
     BookingOut,
     CancelRequest,
     CancelResponse,
+    SeatMapResponse,
 )
 from backend.services import booking_service
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
+
+
+# Seat map
+@router.get("/seat-map", response_model=SeatMapResponse)
+def get_seat_map(
+    showing_id: int = Query(...),
+    show_date: date = Query(...),
+    seat_type: str = Query(...),
+    db: Session = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    """Return all seats of a given type with their live availability status."""
+    try:
+        return booking_service.get_seat_map(db, showing_id, show_date, seat_type)
+    except HCBSException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 # Availability check
@@ -113,6 +136,7 @@ def search_bookings(
     booking_date: Optional[date] = Query(default=None),
     status: Optional[str] = Query(default=None),
     booked_by: Optional[int] = Query(default=None),
+    reference: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
     _user: dict = Depends(get_current_user),
 ):
@@ -127,6 +151,7 @@ def search_bookings(
         customer_phone=customer_phone,
         booked_by=booked_by,
         booking_date=booking_date,
+        reference=reference,
     )
     return [_serialise_booking(b) for b in bookings]
 

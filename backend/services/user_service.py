@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/user_service.py
 User management: list staff, reset passwords, activity logs.

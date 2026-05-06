@@ -1,3 +1,9 @@
+# ============================================
+# Author: Smriti Ale
+# Student ID: 24036547
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/auth_service.py
 Business logic for user authentication.

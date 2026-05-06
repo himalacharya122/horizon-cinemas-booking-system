@@ -1,8 +1,18 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 desktop/ui/windows/booking_staff/search_booking.py
-Search bookings by reference, customer name, email, or phone.
+implements the Search Bookings view for Booking Staff to look up active and historical
+reservations.
+provides filtering by Reference, Customer Name, Email, and Status.
 """
 
+from PyQt6.QtCore import Qt  # type: ignore
+from PyQt6.QtGui import QColor  # type: ignore
 from PyQt6.QtWidgets import (  # type: ignore
     QComboBox,
     QHBoxLayout,
@@ -17,10 +27,17 @@ from PyQt6.QtWidgets import (  # type: ignore
 
 from desktop.api_client import api
 from desktop.ui.theme import (
+    ACCENT,
+    ACCENT_HOVER,
+    BG_DARK,
+    BORDER,
+    DANGER,
+    HERO_BG,
     SPACING_LG,
     SPACING_MD,
-    SPACING_SM,
+    SUCCESS,
     TEXT_SECONDARY,
+    WHITE,
 )
 from desktop.ui.widgets import (
     Card,
@@ -30,114 +47,198 @@ from desktop.ui.widgets import (
     primary_button,
     secondary_button,
     separator,
+    subheading_label,
 )
 
 
 class SearchBookingView(QWidget):
+    """a view that provides advanced searching capabilities for cinema bookings."""
+
     def __init__(self):
+        """initialises the search view and builds the interface."""
         super().__init__()
         self._build_ui()
 
     def _build_ui(self):
+        """constructs the primary layout including search filters and the results table."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         layout.setSpacing(SPACING_MD)
 
-        layout.addWidget(heading_label("Search Bookings"))
+        # header section with view title and search service description
+        header_content = QVBoxLayout()
+        header_content.setSpacing(4)
+        header_content.addWidget(heading_label("Search Bookings"))
+        desc = muted_label(
+            "Centralized search for all active and historical bookings across your cinema"
+        )
+        header_content.addWidget(desc)
+        layout.addLayout(header_content)
         layout.addWidget(separator())
 
-        # Search form
+        # search form card containing various filter inputs
         search_card = Card()
+        search_card.add(subheading_label("Search Filters"))
 
         row1 = QHBoxLayout()
-        row1.setSpacing(SPACING_SM)
+        row1.setSpacing(SPACING_MD)
 
-        lbl_ref = QLabel("Reference:")
-        lbl_ref.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        row1.addWidget(lbl_ref)
+        def _style_input(w, ph="", w_px=180):
+            """helper to apply placeholder text and a fixed width to input widgets."""
+            w.setPlaceholderText(ph)
+            w.setFixedWidth(w_px)
+
+        def _make_label(text):
+            """helper to create styled form labels for the search filters."""
+            lbl = QLabel(text)
+            lbl.setStyleSheet(
+                f"color: {TEXT_SECONDARY}; background: transparent; "
+                f"font-weight: 600; font-size: 10pt; border: none;"
+            )
+            return lbl
+
+        v1 = QVBoxLayout()
+        v1.setSpacing(4)
+        v1.addWidget(_make_label("Reference:"))
         self.ref_input = QLineEdit()
-        self.ref_input.setPlaceholderText("HC-2025-00001")
-        self.ref_input.setFixedWidth(200)
-        row1.addWidget(self.ref_input)
+        _style_input(self.ref_input, "HC-2025-00001", 180)
+        v1.addWidget(self.ref_input)
+        row1.addLayout(v1)
 
-        lbl_name = QLabel("Name:")
-        lbl_name.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        row1.addWidget(lbl_name)
+        v2 = QVBoxLayout()
+        v2.setSpacing(4)
+        v2.addWidget(_make_label("Customer Name:"))
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Customer name")
-        self.name_input.setFixedWidth(200)
-        row1.addWidget(self.name_input)
+        _style_input(self.name_input, "e.g. John Doe", 200)
+        v2.addWidget(self.name_input)
+        row1.addLayout(v2)
 
-        lbl_email = QLabel("Email:")
-        lbl_email.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        row1.addWidget(lbl_email)
+        v3 = QVBoxLayout()
+        v3.setSpacing(4)
+        v3.addWidget(_make_label("Email Address:"))
         self.email_input = QLineEdit()
-        self.email_input.setPlaceholderText("Email address")
-        self.email_input.setFixedWidth(200)
-        row1.addWidget(self.email_input)
+        _style_input(self.email_input, "customer@example.com", 220)
+        v3.addWidget(self.email_input)
+        row1.addLayout(v3)
 
         row1.addStretch()
         search_card.add_layout(row1)
 
         row2 = QHBoxLayout()
-        row2.setSpacing(SPACING_SM)
+        row2.setSpacing(SPACING_MD)
 
-        lbl_phone = QLabel("Phone:")
-        lbl_phone.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        row2.addWidget(lbl_phone)
+        v4 = QVBoxLayout()
+        v4.setSpacing(4)
+        v4.addWidget(_make_label("Phone Number:"))
         self.phone_input = QLineEdit()
-        self.phone_input.setPlaceholderText("Phone number")
-        self.phone_input.setFixedWidth(200)
-        row2.addWidget(self.phone_input)
+        _style_input(self.phone_input, "e.g. 077...", 180)
+        v4.addWidget(self.phone_input)
+        row2.addLayout(v4)
 
-        lbl_status = QLabel("Status:")
-        lbl_status.setStyleSheet(f"color: {TEXT_SECONDARY}; background: transparent;")
-        row2.addWidget(lbl_status)
+        v5 = QVBoxLayout()
+        v5.setSpacing(4)
+        v5.addWidget(_make_label("Booking Status:"))
         self.status_combo = QComboBox()
         self.status_combo.addItems(["All", "confirmed", "cancelled"])
         self.status_combo.setFixedWidth(140)
-        row2.addWidget(self.status_combo)
+        v5.addWidget(self.status_combo)
+        row2.addLayout(v5)
 
         row2.addStretch()
 
-        search_btn = primary_button("Search")
+        btns = QHBoxLayout()
+        btns.setContentsMargins(0, 20, 0, 0)
+        btns.setSpacing(10)
+
+        search_btn = primary_button("Search Results")
+        search_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {ACCENT}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 140px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}"
+        )
         search_btn.clicked.connect(self._do_search)
-        row2.addWidget(search_btn)
+        btns.addWidget(search_btn)
 
-        clear_btn = secondary_button("Clear")
+        clear_btn = secondary_button("Clear Form")
+        clear_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {HERO_BG}; color: {WHITE}; border: none; "
+            f"min-height: 34px; max-height: 34px; min-width: 140px; font-weight: 700; "
+            f"border-radius: 6px; }}"
+            f"QPushButton:hover {{ background-color: #2E2C28; }}"
+        )
         clear_btn.clicked.connect(self._clear_form)
-        row2.addWidget(clear_btn)
+        btns.addWidget(clear_btn)
 
+        row2.addLayout(btns)
         search_card.add_layout(row2)
         layout.addWidget(search_card)
 
-        # Results table
+        # results table for displaying found booking records
         self.table = QTableWidget()
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.table.setShowGrid(False)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(38)
+
+        self.table.setStyleSheet(
+            f"QTableWidget {{ border: 1px solid {BORDER}; border-radius: 8px; "
+            f"background: {WHITE}; }}"
+            f"QHeaderView::section {{ background-color: {BG_DARK}; color: {TEXT_SECONDARY}; "
+            f"font-weight: 600; padding: 8px 5px; border: none; "
+            f"border-bottom: 1px solid {BORDER}; border-right: 1px solid {BORDER}; "
+            f"border-left: 10px solid transparent; }}"
+            f"QTableWidget::item {{ border-left: 10px solid transparent; "
+            f"padding-right: 10px; }}"
+        )
         self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels(
-            ["Reference", "Film", "Date", "Time", "Customer", "Phone", "Tickets", "Total", "Status"]
+            [
+                "Reference",
+                "Film",
+                "Date",
+                "Time",
+                "Customer",
+                "Phone",
+                "Tickets",
+                "Total",
+                "Status",
+            ]
         )
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+
+        hh = self.table.horizontalHeader()
+        hh.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.table.setColumnWidth(0, 170)  # Reference
+        self.table.setColumnWidth(2, 140)  # Date
+        self.table.setColumnWidth(3, 90)  # Time
+        self.table.setColumnWidth(5, 140)  # Phone
+        self.table.setColumnWidth(6, 90)  # Tickets
+        self.table.setColumnWidth(7, 120)  # Total
+        self.table.setColumnWidth(8, 150)  # Status
+
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Film
+        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Customer
+
         layout.addWidget(self.table, 1)
 
         self.result_label = muted_label("")
         layout.addWidget(self.result_label)
 
-        # Detail card
+        # detailed card for displaying expanded booking information
         self.detail_card = Card()
         self.detail_card.hide()
         layout.addWidget(self.detail_card)
 
-        # Enter key triggers search from any input
+        # enter key triggers search from any input field for efficiency
         for inp in (self.ref_input, self.name_input, self.email_input, self.phone_input):
             inp.returnPressed.connect(self._do_search)
 
     def _do_search(self):
-        # If reference is provided, do a direct lookup
+        """orchestrates the search process by prioritizing direct lookup or applying filters."""
+        # if a Booking Reference is provided, perform a direct lookup via the api
         ref = self.ref_input.text().strip()
         if ref:
             try:
@@ -155,7 +256,7 @@ class SearchBookingView(QWidget):
                 error_dialog(self, detail)
                 return
 
-        # Otherwise search with filters
+        # otherwise perform a broader search using the specified filters
         params = {}
         name = self.name_input.text().strip()
         if name:
@@ -170,7 +271,7 @@ class SearchBookingView(QWidget):
         if status != "All":
             params["status"] = status
 
-        # Default to user's cinema for booking staff
+        # default search scope to the user's assigned cinema for Booking Staff
         if api.role == "booking_staff":
             params["cinema_id"] = api.cinema_id
 
@@ -182,6 +283,7 @@ class SearchBookingView(QWidget):
             error_dialog(self, f"Search failed: {e}")
 
     def _fill_table(self, bookings: list):
+        """populates the results QTableWidget with the provided list of booking records."""
         self.table.setRowCount(len(bookings))
         for row, b in enumerate(bookings):
             self.table.setItem(row, 0, QTableWidgetItem(b["booking_reference"]))
@@ -192,9 +294,23 @@ class SearchBookingView(QWidget):
             self.table.setItem(row, 5, QTableWidgetItem(b.get("customer_phone", "") or "\u2014"))
             self.table.setItem(row, 6, QTableWidgetItem(str(b["num_tickets"])))
             self.table.setItem(row, 7, QTableWidgetItem(f"\u00a3{b['total_cost']:.2f}"))
-            self.table.setItem(row, 8, QTableWidgetItem(b["booking_status"].capitalize()))
+
+            # assign colored status indicators based on booking state
+            status_str = b["booking_status"].lower()
+            status_item = QTableWidgetItem(status_str.capitalize())
+            if status_str == "confirmed":
+                status_item.setForeground(QColor(SUCCESS))
+            elif status_str == "cancelled":
+                status_item.setForeground(QColor(DANGER))
+
+            font = status_item.font()
+            font.setBold(True)
+            status_item.setFont(font)
+
+            self.table.setItem(row, 8, status_item)
 
     def _clear_form(self):
+        """resets all search inputs and clears the results table."""
         self.ref_input.clear()
         self.name_input.clear()
         self.email_input.clear()

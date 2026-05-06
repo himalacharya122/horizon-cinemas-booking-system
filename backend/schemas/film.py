@@ -1,3 +1,9 @@
+# ============================================
+# Author: Garima Adhikari
+# Student ID: 24000896
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/schemas/film.py
 Pydantic models for film, listing, and showing data.

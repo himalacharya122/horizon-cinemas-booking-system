@@ -1,3 +1,9 @@
+# ============================================
+# Author: Astha Gurung
+# Student ID: 24036542
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/cinema_service.py
 Business logic for cities, cinemas, screens, seats, and base prices.

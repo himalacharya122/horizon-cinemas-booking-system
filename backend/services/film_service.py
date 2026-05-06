@@ -1,3 +1,9 @@
+# ============================================
+# Author: Garima Adhikari
+# Student ID: 24000896
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/services/film_service.py
 Business logic for films, listings, and showings.

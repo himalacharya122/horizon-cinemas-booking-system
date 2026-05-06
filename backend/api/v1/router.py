@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/v1/router.py
 Collects all v1 endpoint routers under the /api/v1 prefix.
@@ -5,6 +11,7 @@ Collects all v1 endpoint routers under the /api/v1 prefix.
 
 from fastapi import APIRouter
 
+from backend.api.v1.endpoints.ai import router as ai_router
 from backend.api.v1.endpoints.auth import router as auth_router
 from backend.api.v1.endpoints.bookings import router as bookings_router
 from backend.api.v1.endpoints.cinemas import router as cinemas_router
@@ -20,3 +27,4 @@ api_router.include_router(bookings_router)
 api_router.include_router(cinemas_router)
 api_router.include_router(reports_router)
 api_router.include_router(users_router)
+api_router.include_router(ai_router)

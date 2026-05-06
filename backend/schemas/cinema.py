@@ -1,3 +1,9 @@
+# ============================================
+# Author: Astha Gurung
+# Student ID: 24036542
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/schemas/cinema.py
 Pydantic models for cinema, city, screen, and seat data.

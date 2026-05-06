@@ -1,0 +1,44 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
+import json
+import re
+from typing import Dict, List
+
+from backend.services.ai_service import call_groq
+
+SUGGESTION_PROMPT = (
+    "You are a cinema analytics assistant. Based on the conversation below, "
+    "suggest exactly 4 short follow-up questions the user might want to ask next.\n"
+    "\nRules:\n"
+    "- Max 6 words each\n"
+    "- Relevant to what was just discussed, or useful cinema topics if no history\n"
+    "- Return ONLY a JSON array of 4 strings, nothing else\n"
+    '\nExample: ["Top films this month", "Staff performance", "Occupancy rate", "Weekly revenue"]\n'
+    "\nCONVERSATION:\n"
+    "{history}"
+)
+
+
+async def get_dynamic_suggestions(history: List[Dict[str, str]]) -> List[str]:
+    """Generates 4 dynamic follow-up suggestions based on chat context."""
+    history_text = "\n".join([f"{m['role']}: {m['content'][:200]}" for m in history[-4:]])
+
+    prompt = SUGGESTION_PROMPT.format(history=history_text or "No history yet.")
+
+    try:
+        response = await call_groq(
+            [{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+        match = re.search(r"\[.*\]", response, re.DOTALL)
+        if match:
+            suggestions = json.loads(match.group(0))
+            return suggestions[:4]
+    except Exception:
+        pass
+
+    return ["Weekly Revenue", "Staff Performance", "Occupancy Rate", "Top Films"]

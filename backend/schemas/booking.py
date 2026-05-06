@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/schemas/booking.py
 Pydantic models for booking creation, receipts, and cancellation.
@@ -7,6 +13,24 @@ from datetime import date, datetime, time
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+
+# Seat map
+class SeatOut(BaseModel):
+    seat_id: int
+    seat_number: str
+    row_label: str
+    seat_type: str
+    is_available: bool
+
+    model_config = {"from_attributes": True}
+
+
+class SeatMapResponse(BaseModel):
+    seats: list[SeatOut]
+    showing_id: int
+    show_date: date
+    seat_type: str
 
 
 # Booking creation
@@ -19,6 +43,7 @@ class BookingCreate(BaseModel):
     seat_type: str = Field(..., pattern="^(lower_hall|upper_gallery|vip)$")
     num_tickets: int = Field(..., ge=1)
     payment_simulated: bool = False
+    seat_ids: Optional[list[int]] = None  # specific seats chosen via seat map
 
 
 # Booked seat detail

@@ -1,3 +1,9 @@
+# ============================================
+# Author: Ridesha khadka
+# Student ID: 23002960
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/v1/endpoints/users.py
 User management endpoints for admin: list staff, reset passwords, activity logs.

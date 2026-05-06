@@ -1,3 +1,9 @@
+# ============================================
+# Author: Himal Acharya
+# Student ID: 22085619
+# Last Edited: 2026-04-25
+# ============================================
+
 """
 backend/api/deps.py
 FastAPI dependencies for authentication and role-based access control.
@@ -35,6 +41,14 @@ def get_current_user(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Ensure user_id is available as an integer (it's stored as 'sub' in JWT)
+    if "sub" in payload and "user_id" not in payload:
+        try:
+            payload["user_id"] = int(payload["sub"])
+        except (ValueError, TypeError):
+            pass
+
     return payload
 
 
